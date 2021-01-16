@@ -801,19 +801,28 @@ bool RWSInterface::setRAPIDSymbolData(const std::string& task,
   return rws_client_.setRAPIDSymbolData(RAPIDResource(task, symbol), data).success;
 }
 
-bool RWSInterface::startRAPIDExecution()
+void RWSInterface::startRAPIDExecution()
 {
-  return rws_client_.startRAPIDExecution().success;
+  RWSResult const result = rws_client_.startRAPIDExecution();
+
+  if (!result.success)
+    throw std::runtime_error("startRAPIDExecution() failed: " + result.error_message);
 }
 
-bool RWSInterface::stopRAPIDExecution()
+void RWSInterface::stopRAPIDExecution()
 {
-  return rws_client_.stopRAPIDExecution().success;
+  RWSResult const result = rws_client_.stopRAPIDExecution();
+
+  if (!result.success)
+    throw std::runtime_error("stopRAPIDExecution() failed: " + result.error_message);
 }
 
-bool RWSInterface::resetRAPIDProgramPointer()
+void RWSInterface::resetRAPIDProgramPointer()
 {
-  return rws_client_.resetRAPIDProgramPointer().success;
+  RWSResult const result = rws_client_.resetRAPIDProgramPointer();
+
+  if (!result.success)
+      throw std::runtime_error("resetRAPIDProgramPointer() failed " + result.error_message);
 }
 
 bool RWSInterface::setMotorsOn()
@@ -943,16 +952,24 @@ TriBool RWSInterface::isMotorsOn()
                               ContollerStates::CONTROLLER_MOTOR_ON);
 }
 
-TriBool RWSInterface::isRAPIDRunning()
+
+bool RWSInterface::isRAPIDRunning()
 {
-  return compareSingleContent(rws_client_.getRAPIDExecution(),
-                              XMLAttributes::CLASS_CTRLEXECSTATE,
-                              ContollerStates::RAPID_EXECUTION_RUNNING);
+  RWSResult const result = rws_client_.getRAPIDExecution();
+
+  if (!result.success)
+    throw std::runtime_error("getRAPIDExecution failed: " + result.error_message);
+
+  return xmlFindTextContent(result.p_xml_document, XMLAttributes::CLASS_CTRLEXECSTATE) == ContollerStates::RAPID_EXECUTION_RUNNING;
 }
 
-bool RWSInterface::setIOSignal(const std::string& iosignal, const std::string& value)
+
+void RWSInterface::setIOSignal(const std::string& iosignal, const std::string& value)
 {
-  return rws_client_.setIOSignal(iosignal, value).success;
+  RWSResult const result = rws_client_.setIOSignal(iosignal, value);
+
+  if (!result.success)
+    throw std::runtime_error("setIOSignal failed: " + result.error_message);
 }
 
 std::string RWSInterface::getRAPIDSymbolData(const std::string& task,
@@ -963,12 +980,15 @@ std::string RWSInterface::getRAPIDSymbolData(const std::string& task,
                             XMLAttributes::CLASS_VALUE);
 }
 
-bool RWSInterface::getRAPIDSymbolData(const std::string& task,
+void RWSInterface::getRAPIDSymbolData(const std::string& task,
                                       const std::string& module,
                                       const std::string& name,
                                       RAPIDSymbolDataAbstract* p_data)
 {
-  return rws_client_.getRAPIDSymbolData(RAPIDResource(task, module, name), p_data).success;
+  RWSResult const result = rws_client_.getRAPIDSymbolData(RAPIDResource(task, module, name), p_data);
+
+  if (!result.success)
+    throw std::runtime_error("getRAPIDSymbolData failed: " + result.error_message);
 }
 
 bool RWSInterface::getRAPIDSymbolData(const std::string& task,
@@ -983,9 +1003,12 @@ bool RWSInterface::getFile(const FileResource& resource, std::string* p_file_con
   return rws_client_.getFile(resource, p_file_content).success;
 }
 
-bool RWSInterface::uploadFile(const FileResource& resource, const std::string& file_content)
+void RWSInterface::uploadFile(const FileResource& resource, const std::string& file_content)
 {
-  return rws_client_.uploadFile(resource, file_content).success;
+  RWSResult const result = rws_client_.uploadFile(resource, file_content);
+
+  if (!result.success)
+    throw std::runtime_error("uploadFile() failed: " + result.error_message);
 }
 
 bool RWSInterface::deleteFile(const FileResource& resource)

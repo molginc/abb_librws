@@ -579,10 +579,8 @@ public:
    * \param module for the name of the RAPID module containing the RAPID symbol.
    * \param name for the name of the RAPID symbol.
    * \param p_data for storing the retrieved RAPID symbol data.
-   *
-   * \return bool indicating if the communication was successful or not. Note: No checks are made for "correct parsing".
    */
-  bool getRAPIDSymbolData(const std::string& task,
+  void getRAPIDSymbolData(const std::string& task,
                           const std::string& module,
                           const std::string& name,
                           RAPIDSymbolDataAbstract* p_data);
@@ -647,19 +645,17 @@ public:
   /**
    * \brief A method for checking if RAPID is running.
    *
-   * \return TriBool indicating if RAPID is running or not or unknown.
+   * \return bool indicating if RAPID is running or not.
    */
-  TriBool isRAPIDRunning();
+  bool isRAPIDRunning();
 
   /**
    * \brief A method for setting the value of an IO signal.
    *
    * \param iosignal for the name of the IO signal.
    * \param value for the IO signal's new value.
-   *
-   * \return bool indicating if the communication was successful or not.
    */
-  bool setIOSignal(const std::string& iosignal, const std::string& value);
+  void setIOSignal(const std::string& iosignal, const std::string& value);
 
   /**
    * \brief A method for setting the data of a RAPID symbol via raw text format.
@@ -721,24 +717,20 @@ public:
 
   /**
    * \brief A method for starting RAPID execution in the robot controller.
-   *
-   * \return bool indicating if the communication was successful or not.
    */
-  bool startRAPIDExecution();
+  void startRAPIDExecution();
 
   /**
    * \brief A method for stopping RAPID execution in the robot controller.
    *
    * \return bool indicating if the communication was successful or not.
    */
-  bool stopRAPIDExecution();
+  void stopRAPIDExecution();
 
   /**
    * \brief A method for reseting the RAPID program pointer in the robot controller.
-   *
-   * \return bool indicating if the communication was successful or not.
    */
-  bool resetRAPIDProgramPointer();
+  void resetRAPIDProgramPointer();
 
   /**
    * \brief A method for turning on the robot controller's motors.
@@ -782,10 +774,8 @@ public:
    *
    * \param resource specifying the file's directory and name.
    * \param file_content for the file's content.
-   *
-   * \return bool indicating if the communication was successful or not.
    */
-  bool uploadFile(const FileResource& resource, const std::string& file_content);
+  void uploadFile(const FileResource& resource, const std::string& file_content);
 
   /**
    * \brief A method for deleting a file from the robot controller.
