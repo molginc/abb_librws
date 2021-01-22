@@ -709,7 +709,7 @@ public:
    * \param result containing the result of the parsing.
    * \param poco_result containing the POCO result.
    */
-  void parseMessage(RWSResult* result, const POCOResult& poco_result);
+  static void parseMessage(RWSResult* result, const POCOResult& poco_result);
 
   /**
    * \brief Method for retrieving the internal log as a text string.
@@ -718,7 +718,7 @@ public:
    *
    * \return std::string containing the log text. An empty text string is returned if the log is empty.
    */
-  std::string getLogText(const bool verbose = false);
+  std::string getLogText(const bool verbose = false) const;
 
   /**
    * \brief Method for retrieving only the most recently logged event as a text string.
@@ -727,7 +727,7 @@ public:
    *
    * \return std::string containing the log text. An empty text string is returned if the log is empty.
    */
-  std::string getLogTextLatestEvent(const bool verbose = false);
+  std::string getLogTextLatestEvent(const bool verbose = false) const;
 
 private:
   /**
@@ -787,7 +787,7 @@ private:
    *
    * \return std::string containing the path.
    */
-  std::string generateConfigurationPath(const std::string& topic, const std::string& type);
+  static std::string generateConfigurationPath(const std::string& topic, const std::string& type);
 
   /**
    * \brief Method for generating an IO signal URI path.
@@ -796,7 +796,7 @@ private:
    *
    * \return std::string containing the path.
    */
-  std::string generateIOSignalPath(const std::string& iosignal);
+  static std::string generateIOSignalPath(const std::string& iosignal);
 
   /**
    * \brief Method for generating a mechanical unit resource URI path.
@@ -805,7 +805,7 @@ private:
    *
    * \return std::string containing the path.
    */
-  std::string generateMechanicalUnitPath(const std::string& mechunit);
+  static std::string generateMechanicalUnitPath(const std::string& mechunit);
 
   /**
    * \brief Method for generating a RAPID data resource URI path.
@@ -814,7 +814,7 @@ private:
    *
    * \return std::string containing the path.
    */
-  std::string generateRAPIDDataPath(const RAPIDResource& resource);
+  static std::string generateRAPIDDataPath(const RAPIDResource& resource);
 
   /**
    * \brief Method for generating a RAPID properties resource URI path.
@@ -823,7 +823,7 @@ private:
    *
    * \return std::string containing the path.
    */
-  std::string generateRAPIDPropertiesPath(const RAPIDResource& resource);
+  static std::string generateRAPIDPropertiesPath(const RAPIDResource& resource);
 
   /**
    * \brief Method for generating a file resource URI path.
@@ -832,7 +832,7 @@ private:
    *
    * \return std::string containing the path.
    */
-  std::string generateFilePath(const FileResource& resource);
+  static std::string generateFilePath(const FileResource& resource);
 
   /**
    * \brief Static constant for the log's size.

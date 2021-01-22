@@ -745,7 +745,7 @@ void RWSClient::parseMessage(RWSResult* result, const POCOResult& poco_result)
   }
 }
 
-std::string RWSClient::getLogText(const bool verbose)
+std::string RWSClient::getLogText(const bool verbose) const
 {
   if (log_.size() == 0)
   {
@@ -764,7 +764,7 @@ std::string RWSClient::getLogText(const bool verbose)
   return ss.str();
 }
 
-std::string RWSClient::getLogTextLatestEvent(const bool verbose)
+std::string RWSClient::getLogTextLatestEvent(const bool verbose) const
 {
   return (log_.size() == 0 ? "" : log_[0].toString(verbose, 0));
 }
