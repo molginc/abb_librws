@@ -36,6 +36,7 @@
 #include <abb_librws/rws_interface.h>
 #include <abb_librws/rws_rapid.h>
 #include <abb_librws/parsing.h>
+#include <abb_librws/rws.h>
 
 #include <algorithm>
 #include <sstream>

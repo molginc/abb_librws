@@ -41,6 +41,7 @@
 #include "rws_client.h"
 #include "rws_subscription.h"
 #include "rws_info.h"
+#include "xml_attribute.h"
 
 #include <chrono>
 

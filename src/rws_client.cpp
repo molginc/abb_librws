@@ -37,6 +37,7 @@
 #include <abb_librws/rws_client.h>
 #include <abb_librws/rws_error.h>
 #include <abb_librws/parsing.h>
+#include <abb_librws/rws.h>
 
 #include <Poco/Net/HTTPRequest.h>
 
