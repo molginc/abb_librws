@@ -60,6 +60,7 @@ namespace rws
  * See https://developercenter.robotstudio.com/api/rwsApi/ for details about RWS 1.0.
  */
 class RWSClient
+: public SubscriptionManager
 {
 public:
   /**
@@ -466,36 +467,9 @@ public:
                                const std::string& application = SystemConstants::General::EXTERNAL_APPLICATION,
                                const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
 
-  /**
-   * \brief Subscribe to specified resources.
-   *
-   * \param resources resources to subscribe
-   *
-   * \return Id of the created subscription group.
-   *
-   * \throw \a RWSError if something goes wrong.
-   */
-  std::string openSubscription(SubscriptionResources const& resources);
-
-  /**
-   * \brief End subscription to a specified group.
-   *
-   * \param subscription_group_id id of the subscription group to unsubscribe from.
-   *
-   * \throw \a RWSError if something goes wrong.
-   */
-  void closeSubscription(std::string const& subscription_group_id);
-
-  /**
-   * \brief Open a WebSocket and start receiving subscription events.
-   *
-   * \param subscription_group_id subscription group id for which to receive event.
-   *
-   * \return WebSocket created to receive the events.
-   *
-   * \throw \a RWSError if something goes wrong.
-   */
-  Poco::Net::WebSocket receiveSubscription(std::string const& subscription_group_id);
+  std::string openSubscription(SubscriptionResources const& resources) override;
+  void closeSubscription(std::string const& subscription_group_id) override;
+  Poco::Net::WebSocket receiveSubscription(std::string const& subscription_group_id) override;
 
 
   /**

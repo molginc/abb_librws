@@ -214,7 +214,43 @@ namespace abb :: rws
   };
 
 
-  class RWSClient;
+  /**
+   * \brief Provides the mechanism to open, receive, and close and RWS event subscription.
+   */
+  class SubscriptionManager
+  {
+  public:
+    /**
+     * \brief Subscribe to specified resources.
+     *
+     * \param resources resources to subscribe
+     *
+     * \return Id of the created subscription group.
+     *
+     * \throw \a RWSError if something goes wrong.
+     */
+    virtual std::string openSubscription(SubscriptionResources const& resources) = 0;
+
+    /**
+     * \brief End subscription to a specified group.
+     *
+     * \param subscription_group_id id of the subscription group to unsubscribe from.
+     *
+     * \throw \a RWSError if something goes wrong.
+     */
+    virtual void closeSubscription(std::string const& subscription_group_id) = 0;
+
+    /**
+     * \brief Open a WebSocket and start receiving subscription events.
+     *
+     * \param subscription_group_id subscription group id for which to receive event.
+     *
+     * \return WebSocket created to receive the events.
+     *
+     * \throw \a RWSError if something goes wrong.
+     */
+    virtual Poco::Net::WebSocket receiveSubscription(std::string const& subscription_group_id) = 0;
+  };
 
 
   /**
@@ -226,10 +262,10 @@ namespace abb :: rws
     /**
      * \brief Registers a subscription at the server.
      *
-     * \param client a client to subscribe. The lifetime of the client must exceed the lifetime of the subscription group.
+     * \param subscription_manager an interface to control the subscription
      * \param resources list of resources to subscribe
      */
-    SubscriptionGroup(RWSClient& client, SubscriptionResources const& resources);
+    SubscriptionGroup(SubscriptionManager& subscription_manager, SubscriptionResources const& resources);
 
 
     /**
@@ -263,7 +299,7 @@ namespace abb :: rws
 
 
   private:
-    RWSClient& client_;
+    SubscriptionManager& subscription_manager_;
 
     /**
      * \brief A subscription group id.

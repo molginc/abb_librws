@@ -53,7 +53,7 @@ namespace rws
  * \brief User-friendly interface to Robot Web Services (RWS) 1.0.
  *
  * Only a subset of the features available in RWS are implemented here.
- * See https://developercenter.robotstudio.com/api/rwsApi/ for details about RWS 1.0.
+ * See https://developercenter.robotstudio.com/api/rwsApi/ for details about RWS 1.0
  */
 class RWSInterface
 {
