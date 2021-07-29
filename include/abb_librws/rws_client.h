@@ -53,15 +53,11 @@ namespace abb
 namespace rws
 {
 /**
- * \brief A class for a Robot Web Services (RWS) client based on a POCO client.
+ * \brief A class for a Robot Web Services (RWS) 1.0 client.
  *
  * Note: Only a subset of the features available in RWS are implemented here.
  *
- * See http://developercenter.robotstudio.com/webservice/api_reference for details about RWS.
- *
- * TODO:
- * - Flesh out the subscription functionality. E.g. implement a "subscription manager".
- *
+ * See https://developercenter.robotstudio.com/api/rwsApi/ for details about RWS 1.0.
  */
 class RWSClient
 {
