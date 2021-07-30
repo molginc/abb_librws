@@ -626,6 +626,7 @@ private:
   Poco::Net::HTTPSClientSession session_;
   POCOClient http_client_;
   Poco::XML::DOMParser parser_;
+  int mastership_counter_ = 0;
 };
 
 } // end namespace rws

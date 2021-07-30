@@ -683,7 +683,23 @@ void RWSClient2::closeSubscription(std::string const& subscription_group_id)
 
 Poco::Net::WebSocket RWSClient2::receiveSubscription(std::string const& subscription_group_id)
 {
-  return http_client_.webSocketConnect("/poll/" + subscription_group_id, "rws_subscription");
+  if (mastership_counter_)
+  {
+    // TODO extract those two lines to private method and use here and in releaseMastership
+    std::string uri = Resources::RW_MASTERSHIP + "/release";
+    httpPost(uri, "", "application/x-www-form-urlencoded;v=2.0");
+  }
+
+  auto webSocket = http_client_.webSocketConnect("/poll/" + subscription_group_id, "rws_subscription");
+
+  if (mastership_counter_)
+  {
+    // TODO extract those two lines to private method and use here and in requestMastership
+    std::string uri = Resources::RW_MASTERSHIP + "/request";
+    httpPost(uri, "", "application/x-www-form-urlencoded;v=2.0");
+  }
+
+  return webSocket;
 }
 
 
@@ -702,15 +718,23 @@ Poco::Timespan RWSClient2::getHTTPTimeout() const noexcept
 
 void RWSClient2::requestMastership()
 {
-  std::string uri = Resources::RW_MASTERSHIP + "/request";
-  httpPost(uri, "", "application/x-www-form-urlencoded;v=2.0");
+  if (mastership_counter_ == 0)
+  {
+    std::string uri = Resources::RW_MASTERSHIP + "/request";
+    httpPost(uri, "", "application/x-www-form-urlencoded;v=2.0");
+  }
+  ++mastership_counter_;
 }
 
 
 void RWSClient2::releaseMastership()
 {
-  std::string uri = Resources::RW_MASTERSHIP + "/release";
-  httpPost(uri, "", "application/x-www-form-urlencoded;v=2.0");
+  if (mastership_counter_ == 1)
+  {
+    std::string uri = Resources::RW_MASTERSHIP + "/release";
+    httpPost(uri, "", "application/x-www-form-urlencoded;v=2.0");
+  }
+  mastership_counter_ = mastership_counter_ > 0 ? mastership_counter_ - 1 : 0;
 }
 
 
