@@ -148,6 +148,15 @@ public:
   std::vector<cfg::moc::Transmission> getCFGTransmission();
 
   /**
+   * \brief Retrieves the configuration instances for the signals defined in the system.
+   *
+   * \return std::vector<cfg::eio::Signal> containing a list of the signals defined in the system.
+   *
+   * \throw std::runtime_error if failed to get or parse the configuration instances.
+   */
+  std::vector<cfg::eio::Signal> getCFGSignals();
+
+  /**
    * \brief A method for retrieving the RobotWare options present on the active robot controller system.
    *
    * This method has been deprecated, please use 'getCFGPresentOptions()' instead.
@@ -337,6 +346,23 @@ public:
   ///
   void setAnalogSignal(std::string const& signal_name, float value);
 
+  /**
+   * \brief A method for creating new signal configuration instance.
+   *
+   * \param name the name of the new signal.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void createSignalConfigurationInstance(const std::string& name);
+
+  /**
+   * \brief A method for modifying signal configuration instance.
+   *
+   * \param signal new attributes for a signal.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void updateSignalConfigurationInstance(const cfg::eio::Signal& signal);
 
   /**
    * \brief A method for setting the data of a RAPID symbol via raw text format.

@@ -107,6 +107,29 @@ public:
   RWSResult getConfigurationInstances(const std::string& topic, const std::string& type);
 
   /**
+   * \brief A method for creating the configuration instance of a type, belonging to a specific configuration topic.
+   *
+   * \param topic specifying the configuration topic.
+   * \param type specifying the type in the configuration topic.
+   * \param name specifying the name of new configuration instance.
+   *
+   * \throw \a RWSError if something goes wrong.
+   */
+  void createConfigurationInstance(const std::string& topic, const std::string& type, const std::string& name);
+
+  /**
+   * \brief A method for modifying the configuration instance of a type, belonging to a specific configuration topic.
+   *
+   * \param topic specifying the configuration topic.
+   * \param type specifying the type in the configuration topic.
+   * \param name specifying the name of new configuration instance.
+   * \param attributes specifying new values for configuration instance.
+   *
+   * \throw \a RWSError if something goes wrong.
+   */
+  void updateConfigurationInstance(const std::string& topic, const std::string& type, const std::string& name, std::vector<std::pair<std::string, std::string>> attributes);
+
+  /**
    * \brief A method for retrieving all available IO signals on the controller.
    *
    * \return RWSResult containing the result.

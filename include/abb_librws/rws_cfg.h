@@ -265,6 +265,43 @@ struct PresentOption
 };
 } // end namespace sys
 
+/**
+ * \brief Namespace for types belonging to the I/O system (EIO) domain.
+ */
+namespace eio
+{
+/**
+ * \brief Representation of a 'Mechanical Unit Group' instance.
+ */
+struct Signal
+{
+  /**
+   * \brief The instance's name.
+   */
+  std::string name;
+
+  /**
+   * \brief TODO.
+   */
+  std::string signal_type;
+
+  /**
+   * \brief TODO.
+   */
+  std::string access;
+
+  /**
+   * \brief TODO.
+   */
+  double max_log;
+
+  /**
+   * \brief TODO.
+   */
+  double min_log;
+};
+} // end namespace eio
+
 } // end namespace cfg
 } // end namespace rws
 } // end namespace abb

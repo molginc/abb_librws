@@ -119,6 +119,29 @@ RWSClient2::RWSResult RWSClient2::getConfigurationInstances(const std::string& t
   return parseContent(httpGet(uri));
 }
 
+void RWSClient2::createConfigurationInstance(const std::string& topic, const std::string& type, const std::string& name)
+{
+  std::string uri = generateConfigurationPath(topic, type) + Resources::INSTANCES + "/create-default";
+  std::string content = "name=" + name;
+  std::string content_type = "application/x-www-form-urlencoded;v=2.0";
+  httpPost(uri, content, content_type);
+}
+
+void RWSClient2::updateConfigurationInstance(const std::string& topic, const std::string& type, const std::string& name, std::vector<std::pair<std::string, std::string>> attributes)
+{
+  std::string uri = generateConfigurationPath(topic, type) + Resources::INSTANCES + "/" + name;
+
+  std::stringstream content;
+  for (std::size_t i = 0; i < attributes.size(); ++i)
+  {
+    content << attributes[i].first << "=" << attributes[i].second
+            << (i < attributes.size() - 1 ? "&" : "");
+  }
+
+  std::string content_type = "application/x-www-form-urlencoded;v=2.0";
+  httpPost(uri, content.str(), content_type);
+}
+
 RWSClient2::RWSResult RWSClient2::getIOSignals()
 {
   std::string const & uri = RWS2::Resources::RW_IOSYSTEM_SIGNALS;
@@ -514,7 +537,7 @@ POCOResult RWSClient2::httpPost(const std::string& uri, const std::string& conte
 {
   POCOResult const result = http_client_.httpPost(uri, content, content_type);
 
-  if (result.httpStatus() != HTTPResponse::HTTP_NO_CONTENT && result.httpStatus() != HTTPResponse::HTTP_OK)
+  if (result.httpStatus() != HTTPResponse::HTTP_NO_CONTENT && result.httpStatus() != HTTPResponse::HTTP_OK && result.httpStatus() != HTTPResponse::HTTP_CREATED)
     BOOST_THROW_EXCEPTION(ProtocolError {"HTTP response status not accepted"}
       << HttpMethodErrorInfo {"POST"}
       << UriErrorInfo {uri}

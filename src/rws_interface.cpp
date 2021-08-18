@@ -541,6 +541,59 @@ std::vector<cfg::moc::Transmission> RWSInterface::getCFGTransmission()
   return result;
 }
 
+std::vector<cfg::eio::Signal> RWSInterface::getCFGSignals()
+{
+  std::vector<cfg::eio::Signal> result;
+
+  RWSResult rws_result = rws_client_.getConfigurationInstances(Identifiers::EIO_, Identifiers::EIO_SIGNAL);
+
+  std::vector<Poco::XML::Node*> instances;
+  instances = xmlFindNodes(rws_result, XMLAttributes::CLASS_CFG_DT_INSTANCE_LI);
+
+  for(size_t i = 0; i < instances.size(); ++i)
+  {
+    std::vector<Poco::XML::Node*> attributes = xmlFindNodes(instances[i], XMLAttributes::CLASS_CFG_IA_T_LI);
+
+    cfg::eio::Signal signal;
+
+    for(size_t j = 0; j < attributes.size(); ++j)
+    {
+      Poco::XML::Node* attribute = attributes[j];
+      if(xmlNodeHasAttribute(attribute, Identifiers::TITLE, Identifiers::NAME))
+      {
+        signal.name = xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE);
+        if(signal.name.empty()) throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if(xmlNodeHasAttribute(attribute, Identifiers::TITLE, Identifiers::SIGNAL_TYPE))
+      {
+        signal.signal_type = xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE);
+        if(signal.signal_type.empty()) throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if(xmlNodeHasAttribute(attribute, Identifiers::TITLE, Identifiers::ACCESS))
+      {
+        signal.access = xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE);
+        if(signal.access.empty()) throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if(xmlNodeHasAttribute(attribute, Identifiers::TITLE, Identifiers::MAX_LOG))
+      {
+        std::stringstream ss(xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE));
+        ss >> signal.max_log;
+        if(ss.fail()) throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if(xmlNodeHasAttribute(attribute, Identifiers::TITLE, Identifiers::MIN_LOG))
+      {
+        std::stringstream ss(xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE));
+        ss >> signal.min_log;
+        if(ss.fail()) throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+    }
+
+    result.push_back(signal);
+  }
+
+  return result;
+}
+
 std::vector<RobotWareOptionInfo> RWSInterface::getPresentRobotWareOptions()
 {
   std::vector<RobotWareOptionInfo> result;
@@ -739,6 +792,22 @@ RobTarget RWSInterface::getMechanicalUnitRobTarget(const std::string& mechunit,
   robtarget.parseString(ss.str());
 
   return robtarget;
+}
+
+void RWSInterface::createSignalConfigurationInstance(const std::string& name)
+{
+  rws_client_.createConfigurationInstance(Identifiers::EIO_, Identifiers::EIO_SIGNAL, name);
+}
+
+void RWSInterface::updateSignalConfigurationInstance(const cfg::eio::Signal& signal)
+{
+  std::vector<std::pair<std::string, std::string>> attributes;
+  attributes.emplace_back(Identifiers::SIGNAL_TYPE, signal.signal_type);
+  attributes.emplace_back(Identifiers::ACCESS, signal.access);
+  attributes.emplace_back(Identifiers::MAX_LOG, std::to_string(signal.max_log));
+  attributes.emplace_back(Identifiers::MIN_LOG, std::to_string(signal.min_log));
+
+  rws_client_.updateConfigurationInstance(Identifiers::EIO_, Identifiers::EIO_SIGNAL, signal.name, attributes);
 }
 
 void RWSInterface::setRAPIDSymbolData(const std::string& task,

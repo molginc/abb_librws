@@ -9,6 +9,7 @@ namespace abb :: rws
   typedef RWS::Services      Services;
   typedef RWS::XMLAttributes XMLAttributes;
 
+  const std::string Identifiers::ACCESS                         = "Access";
   const std::string Identifiers::ACTIVE                         = "active";
   const std::string Identifiers::ARM                            = "arm";
   const std::string Identifiers::CFG_DT_INSTANCE_LI             = "cfg-dt-instance-li";
@@ -17,12 +18,16 @@ namespace abb :: rws
   const std::string Identifiers::CTRLEXECSTATE                  = "ctrlexecstate";
   const std::string Identifiers::CTRLSTATE                      = "ctrlstate";
   const std::string Identifiers::DATTYP                         = "dattyp";
+  const std::string Identifiers::EIO_                           = "eio";
+  const std::string Identifiers::EIO_SIGNAL                     = "eio_signal";
   const std::string Identifiers::EXCSTATE                       = "excstate";
   const std::string Identifiers::IOS_SIGNAL                     = "ios-signal";
   const std::string Identifiers::HOME_DIRECTORY                 = "$home";
   const std::string Identifiers::LVALUE                         = "lvalue";
+  const std::string Identifiers::MAX_LOG                        = "MaxLog";
   const std::string Identifiers::MECHANICAL_UNIT                = "mechanical_unit";
   const std::string Identifiers::MECHANICAL_UNIT_GROUP          = "mechanical_unit_group";
+  const std::string Identifiers::MIN_LOG                        = "MinLog";
   const std::string Identifiers::MOC                            = "moc";
   const std::string Identifiers::MODULE                         = "module";
   const std::string Identifiers::MODULEPATH                     = "modulepath";
@@ -34,6 +39,7 @@ namespace abb :: rws
   const std::string Identifiers::RAP_TASK_LI                    = "rap-task-li";
   const std::string Identifiers::ROBOT                          = "robot";
   const std::string Identifiers::RW_VERSION_NAME                = "rwversionname";
+  const std::string Identifiers::SIGNAL_TYPE                    = "SignalType";
   const std::string Identifiers::SINGLE                         = "single";
   const std::string Identifiers::STATE                          = "state";
   const std::string Identifiers::SYS                            = "sys";

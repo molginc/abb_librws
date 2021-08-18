@@ -133,6 +133,11 @@ namespace abb :: rws
     struct ABB_LIBRWS_EXPORT Identifiers
     {
       /**
+       * \brief Signal access level.
+       */
+      static const std::string ACCESS;
+
+      /**
        * \brief Active type.
        */
       static const std::string ACTIVE;
@@ -178,6 +183,16 @@ namespace abb :: rws
       static const std::string DATTYP;
 
       /**
+       * \brief I/O Signals in the system configurations (abbreviated as eio).
+       */
+      static const std::string EIO_;
+
+      /**
+       * \brief I/O Signal domain.
+       */
+      static const std::string EIO_SIGNAL;
+
+      /**
        * \brief Execution state type.
        */
       static const std::string EXCSTATE;
@@ -193,6 +208,11 @@ namespace abb :: rws
       static const std::string IOS_SIGNAL;
 
       /**
+       * \brief Maximum logical value of analog signal.
+       */
+      static const std::string MAX_LOG;
+
+      /**
        * \brief Mechanical unit.
        */
       static const std::string MECHANICAL_UNIT;
@@ -201,6 +221,11 @@ namespace abb :: rws
        * \brief Mechanical unit group.
        */
       static const std::string MECHANICAL_UNIT_GROUP;
+
+      /**
+       * \brief Minimum logical value of analog signal.
+       */
+      static const std::string MIN_LOG;
 
       /**
        * \brief Motion topic in the system configurations (abbreviated as moc).
@@ -261,6 +286,11 @@ namespace abb :: rws
        * \brief RobotWare version name.
        */
       static const std::string RW_VERSION_NAME;
+
+      /**
+       * \brief I/O signal type.
+       */
+      static const std::string SIGNAL_TYPE;
 
       /**
        * \brief Single.

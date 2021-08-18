@@ -114,6 +114,27 @@ RWSClient::RWSResult RWSClient::getConfigurationInstances(const std::string& top
   return parseContent(httpGet(uri));
 }
 
+void RWSClient::createConfigurationInstance(const std::string& topic, const std::string& type, const std::string& name)
+{
+  std::string uri = generateConfigurationPath(topic, type) + Resources::INSTANCES + "/create-default";
+  std::string content = "name=" + name;
+  httpPost(uri, content);
+}
+
+void RWSClient::updateConfigurationInstance(const std::string& topic, const std::string& type, const std::string& name, std::vector<std::pair<std::string, std::string>> attributes)
+{
+  std::string uri = generateConfigurationPath(topic, type) + Resources::INSTANCES + "/" + name;
+
+  std::stringstream content;
+  for (std::size_t i = 0; i < attributes.size(); ++i)
+  {
+    content << attributes[i].first << "=" << attributes[i].second
+            << (i < attributes.size() - 1 ? "&" : "");
+  }
+
+  httpPost(uri, content.str());
+}
+
 RWSClient::RWSResult RWSClient::getIOSignals()
 {
   std::string const & uri = RWS::Resources::RW_IOSYSTEM_SIGNALS;
