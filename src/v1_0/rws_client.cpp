@@ -34,10 +34,10 @@
  ***********************************************************************************************************************
  */
 
-#include <abb_librws/rws_client.h>
+#include <abb_librws/v1_0/rws_client.h>
+#include <abb_librws/v1_0/rws.h>
 #include <abb_librws/rws_error.h>
 #include <abb_librws/parsing.h>
-#include <abb_librws/rws.h>
 
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/DOM/NodeList.h>
@@ -53,17 +53,9 @@ namespace
 static const char EXCEPTION_CREATE_STRING[]{"Failed to create string"};
 }
 
-namespace abb
-{
-namespace rws
+namespace abb :: rws :: v1_0
 {
 using namespace Poco::Net;
-
-typedef RWS::Identifiers   Identifiers;
-typedef RWS::Queries       Queries;
-typedef RWS::Resources     Resources;
-typedef RWS::Services      Services;
-typedef RWS::XMLAttributes XMLAttributes;
 
 
 /***********************************************************************************************************************
@@ -118,7 +110,7 @@ RWSClient::RWSResult RWSClient::getConfigurationInstances(const std::string& top
 
 RWSClient::RWSResult RWSClient::getIOSignals()
 {
-  std::string const & uri = RWS::Resources::RW_IOSYSTEM_SIGNALS;
+  std::string const & uri = Resources::RW_IOSYSTEM_SIGNALS;
   return parseContent(httpGet(uri));
 }
 
@@ -691,6 +683,4 @@ void RWSClient::processEvent(Poco::AutoPtr<Poco::XML::Document> doc, Subscriptio
       BOOST_THROW_EXCEPTION(ProtocolError {"Cannot parse RWS event message: unrecognized class " + class_attribute_value});
   }
 }
-
-} // end namespace rws
-} // end namespace abb
+}
