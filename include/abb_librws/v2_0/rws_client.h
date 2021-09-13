@@ -43,7 +43,6 @@
 #include <abb_librws/rws_rapid.h>
 #include <abb_librws/rws_poco_client.h>
 #include <abb_librws/rws_resource.h>
-#include <abb_librws/rws_subscription.h>
 #include <abb_librws/coordinate.h>
 #include <abb_librws/connection_options.h>
 
@@ -60,7 +59,6 @@ namespace abb :: rws :: v2_0
  * See https://developercenter.robotstudio.com/api/RWS for details about RWS 2.0
  */
 class RWSClient
-: public SubscriptionManager
 {
 public:
   /**
@@ -432,13 +430,9 @@ public:
                                const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
 
   // SubscriptionManager implementation
-  std::string openSubscription(std::vector<std::pair<std::string, SubscriptionPriority>> const& resources) override;
-  void closeSubscription(std::string const& subscription_group_id) override;
-  Poco::Net::WebSocket receiveSubscription(std::string const& subscription_group_id) override;
-  std::string getResourceURI(IOSignalResource const& io_signal) const override;
-  std::string getResourceURI(RAPIDResource const& resource) const override;
-  std::string getResourceURI(RAPIDExecutionStateResource const&) const override;
-  void processEvent(Poco::AutoPtr<Poco::XML::Document> content, SubscriptionCallback& callback) const override;
+  std::string getResourceURI(IOSignalResource const& io_signal) const;
+  std::string getResourceURI(RAPIDResource const& resource) const;
+  std::string getResourceURI(RAPIDExecutionStateResource const&) const;
 
   /**
    * \brief A method for sending a HTTP GET request and checking response status.
@@ -477,6 +471,18 @@ public:
    * \return POCOResult containing the result.
    */
   POCOResult httpDelete(const std::string& uri);
+
+  /**
+   * \brief A method for connecting a WebSocket.
+   *
+   * \param uri for the URI (path and query).
+   * \param protocol for the WebSocket protocol.
+   *
+   * \return Newly created client WebSocket.
+   *
+   * \throw \a std::runtime_error if something goes wrong
+   */
+  Poco::Net::WebSocket webSocketConnect(const std::string& uri, const std::string& protocol);
 
 
 private:

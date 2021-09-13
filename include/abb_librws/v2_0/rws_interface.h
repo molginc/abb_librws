@@ -39,7 +39,6 @@
 #include <abb_librws/rws_cfg.h>
 #include <abb_librws/v2_0/rws_client.h>
 #include <abb_librws/v2_0/rws.h>
-#include <abb_librws/rws_subscription.h>
 #include <abb_librws/rws_info.h>
 #include <abb_librws/xml_attribute.h>
 
@@ -474,17 +473,6 @@ public:
   void deleteFile(const FileResource& resource);
 
   /**
-   * \brief Creates a subscription group.
-   *
-   * \param resources specifying the resources to subscribe to.
-   *
-   * \return Newly created \a SubscriptionGroup for specified subscription resources.
-   *
-   * \throw \a std::exception if something goes wrong
-   */
-  SubscriptionGroup openSubscription(const SubscriptionResources& resources);
-
-  /**
    * \brief A method for registering a user as local.
    *
    * \param username specifying the user name.
@@ -523,6 +511,11 @@ public:
    * \param domain mastership domain to be released
    */
   void releaseMastership(MastershipDomain domain);
+
+  RWSClient& getClient()
+  {
+    return rws_client_;
+  }
 
 private:
   using RWSResult = RWSClient::RWSResult;

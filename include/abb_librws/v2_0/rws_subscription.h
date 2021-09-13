@@ -1,9 +1,10 @@
 #pragma once
 
-#include "rws_resource.h"
-#include "rws_websocket.h"
-#include "rapid_execution_state.h"
-#include "rws_error.h"
+#include <abb_librws/rws_resource.h>
+#include <abb_librws/rws_websocket.h>
+#include <abb_librws/rapid_execution_state.h>
+#include <abb_librws/rws_error.h>
+#include <abb_librws/v1_0/rws_client.h>
 
 #include <Poco/DOM/DOMParser.h>
 #include <Poco/Net/WebSocket.h>
@@ -16,7 +17,7 @@
 #include <chrono>
 
 
-namespace abb :: rws
+namespace abb :: rws :: v2_0
 {
   /**
    * \brief An enum for specifying subscription priority.
@@ -38,37 +39,6 @@ namespace abb :: rws
   class SubscriptionManager
   {
   public:
-    /**
-     * \brief Subscribe to specified resources.
-     *
-     * \param resources list of pairs (resource URIs, priority) to subscribe
-     *
-     * \return Id of the created subscription group.
-     *
-     * \throw \a RWSError if something goes wrong.
-     */
-    virtual std::string openSubscription(std::vector<std::pair<std::string, SubscriptionPriority>> const& resources) = 0;
-
-    /**
-     * \brief End subscription to a specified group.
-     *
-     * \param subscription_group_id id of the subscription group to unsubscribe from.
-     *
-     * \throw \a RWSError if something goes wrong.
-     */
-    virtual void closeSubscription(std::string const& subscription_group_id) = 0;
-
-    /**
-     * \brief Open a WebSocket and start receiving subscription events.
-     *
-     * \param subscription_group_id subscription group id for which to receive event.
-     *
-     * \return WebSocket created to receive the events.
-     *
-     * \throw \a RWSError if something goes wrong.
-     */
-    virtual Poco::Net::WebSocket receiveSubscription(std::string const& subscription_group_id) = 0;
-
     /**
      * \brief Get URI for subscribing to an IO signal
      *
@@ -93,16 +63,6 @@ namespace abb :: rws
      * \return Subscription URI
      */
     virtual std::string getResourceURI(RAPIDExecutionStateResource const&) const = 0;
-
-    /**
-     * \brief Process subscription event.
-     *
-     * Parses the event content \a content, determines event type, and calls the appropriate function in \a callback.
-     *
-     * \param content XML content of the event
-     * \param callback event callback
-     */
-    virtual void processEvent(Poco::AutoPtr<Poco::XML::Document> content, SubscriptionCallback& callback) const = 0;
   };
 
 
@@ -215,10 +175,10 @@ namespace abb :: rws
     /**
      * \brief Prepares to receive events from a specified subscription WebSocket.
      *
-     * \param subscription_manager used to initiate WebSocket connection and parse incomoing message content
+     * \param client RWS client for communication
      * \param subscription_group_id id of the subscription group for which to receive events
      */
-    explicit SubscriptionReceiver(SubscriptionManager& subscription_manager, std::string const& subscription_group_id);
+    explicit SubscriptionReceiver(RWSClient& client, std::string const& subscription_group_id);
 
 
     /**
@@ -278,7 +238,7 @@ namespace abb :: rws
      */
     char websocket_buffer_[BUFFER_SIZE];
 
-    SubscriptionManager& subscription_manager_;
+    RWSClient& client_;
 
     /**
      * \brief WebSocket for receiving events.
@@ -292,6 +252,7 @@ namespace abb :: rws
 
 
     bool webSocketReceiveFrame(WebSocketFrame& frame, std::chrono::microseconds timeout);
+    void processEvent(Poco::AutoPtr<Poco::XML::Document> content, SubscriptionCallback& callback) const;
   };
 
 
@@ -299,15 +260,19 @@ namespace abb :: rws
    * \brief Manages an RWS subscription group.
    */
   class SubscriptionGroup
+  : private SubscriptionManager
   {
   public:
     /**
      * \brief Registers a subscription at the server.
      *
-     * \param subscription_manager an interface to control the subscription
+     * \param client RWS client for communication
      * \param resources list of resources to subscribe
+     * \param callback a callback that gets called with the initial values of the resources being subscribed.
+     *
+     * \throw \a RWSError if something goes wrong
      */
-    explicit SubscriptionGroup(SubscriptionManager& subscription_manager, SubscriptionResources const& resources);
+    explicit SubscriptionGroup(RWSClient& client, SubscriptionResources const& resources, SubscriptionCallback& callback);
 
 
     /**
@@ -364,11 +329,11 @@ namespace abb :: rws
 
 
   private:
-    static std::vector<std::pair<std::string, SubscriptionPriority>> getURI(
-      SubscriptionManager& subscription_manager, SubscriptionResources const& resources);
+    std::string getResourceURI(IOSignalResource const& io_signal) const override;
+    std::string getResourceURI(RAPIDResource const& resource) const override;
+    std::string getResourceURI(RAPIDExecutionStateResource const&) const override;
 
-
-    SubscriptionManager& subscription_manager_;
+    RWSClient& client_;
 
     /**
      * \brief A subscription group id.
@@ -393,7 +358,7 @@ namespace abb :: rws
   template <typename T>
   inline std::future<T> waitForEvent(SubscriptionReceiver& receiver, std::chrono::microseconds timeout)
   {
-    struct Callback : rws::SubscriptionCallback
+    struct Callback : SubscriptionCallback
     {
         void processEvent(T const& event) override
         {
