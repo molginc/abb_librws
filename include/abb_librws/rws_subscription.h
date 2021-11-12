@@ -5,6 +5,7 @@
 #include "rws_error.h"
 
 #include <abb_librws/common/rw/rapid.h>
+#include <abb_librws/common/rw/panel.h>
 
 #include <Poco/DOM/DOMParser.h>
 #include <Poco/Net/WebSocket.h>
@@ -94,6 +95,13 @@ namespace abb :: rws
      * \return Subscription URI
      */
     virtual std::string getResourceURI(RAPIDExecutionStateResource const&) const = 0;
+
+    /**
+     * \brief Get URI for subscribing to controller state
+     *
+     * \return Subscription URI
+     */
+    virtual std::string getResourceURI(ControllerStateResource const&) const = 0;
 
     /**
      * \brief Process subscription event.
@@ -197,6 +205,18 @@ namespace abb :: rws
 
 
   /**
+   * \brief Event received when controller state changes.
+   */
+  struct ControllerStateEvent
+  {
+    /**
+     * \brief Controller state
+     */
+    rw::ControllerState state;
+  };
+
+
+  /**
    * \brief Defines callbacks for different types of RWS subscription events.
    */
   class SubscriptionCallback
@@ -204,6 +224,7 @@ namespace abb :: rws
   public:
     virtual void processEvent(IOSignalStateEvent const& event);
     virtual void processEvent(RAPIDExecutionStateEvent const& event);
+    virtual void processEvent(ControllerStateEvent const& event);
   };
 
 

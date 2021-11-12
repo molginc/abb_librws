@@ -22,6 +22,9 @@ namespace abb :: rws :: rw
     };
 
 
+    std::ostream& operator<<(std::ostream& os, ControllerState state);
+
+
     /**
      * \brief Create \a ControllerState from string.
      *

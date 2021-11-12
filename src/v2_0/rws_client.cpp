@@ -631,6 +631,12 @@ std::string RWSClient::getResourceURI(RAPIDResource const& resource) const
 }
 
 
+std::string RWSClient::getResourceURI(ControllerStateResource const& resource) const
+{
+  BOOST_THROW_EXCEPTION(std::logic_error {"Not implemented"});
+}
+
+
 std::string RWSClient::getResourceURI(RAPIDExecutionStateResource const&) const
 {
   return "/rw/rapid/execution;ctrlexecstate";

@@ -179,4 +179,8 @@ namespace abb :: rws
   {
   }
 
+
+  void SubscriptionCallback::processEvent(ControllerStateEvent const& event)
+  {
+  }
 }

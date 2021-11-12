@@ -499,6 +499,12 @@ std::string RWSClient::getResourceURI(RAPIDResource const& resource) const
 }
 
 
+std::string RWSClient::getResourceURI(ControllerStateResource const&) const
+{
+  return "/rw/panel/ctrlstate";
+}
+
+
 std::string RWSClient::getResourceURI(RAPIDExecutionStateResource const&) const
 {
   return "/rw/rapid/execution;ctrlexecstate";
@@ -537,6 +543,12 @@ void RWSClient::processEvent(Poco::AutoPtr<Poco::XML::Document> doc, Subscriptio
   {
     RAPIDExecutionStateEvent event;
     event.state = rw::makeRAPIDExecutionState(xmlFindTextContent(li_node, XMLAttribute {"class", "ctrlexecstate"}));
+    callback.processEvent(event);
+  }
+  else if (class_attribute_value == "pnl-ctrlstate-ev")
+  {
+    ControllerStateEvent event;
+    event.state = rw::makeControllerState(xmlFindTextContent(li_node, XMLAttribute {"class", "ctrlstate"}));
     callback.processEvent(event);
   }
   else
