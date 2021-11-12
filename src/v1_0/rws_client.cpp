@@ -198,12 +198,6 @@ RWSResult RWSClient::getSpeedRatio()
   return parseContent(httpGet(uri));
 }
 
-RWSResult RWSClient::getPanelControllerState()
-{
-  std::string uri = Resources::RW_PANEL_CTRLSTATE;
-  return parseContent(httpGet(uri));
-}
-
 RWSResult RWSClient::getPanelOperationMode()
 {
   std::string uri = Resources::RW_PANEL_OPMODE;

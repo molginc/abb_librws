@@ -77,6 +77,7 @@ static bool digitalSignalToBool(std::string const& value)
 RWSInterface::RWSInterface(RWSClient& client)
 : rws_client_ {client}
 , rapid_ {rws_client_}
+, panel_ {rws_client_}
 {
 }
 
@@ -840,9 +841,7 @@ bool RWSInterface::isAutoMode()
 
 bool RWSInterface::isMotorsOn()
 {
-  return compareSingleContent(rws_client_.getPanelControllerState(),
-                              XMLAttributes::CLASS_CTRLSTATE,
-                              ContollerStates::CONTROLLER_MOTOR_ON);
+  return panel_.getControllerState() == rw::ControllerState::motorOn;
 }
 
 bool RWSInterface::isRAPIDRunning()

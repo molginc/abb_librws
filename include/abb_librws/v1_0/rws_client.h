@@ -193,15 +193,6 @@ public:
   RWSResult getSpeedRatio();
 
   /**
-   * \brief A method for retrieving the controller state.
-   *
-   * \return RWSResult containing the result.
-   *
-   * \throw \a RWSError if something goes wrong.
-   */
-  RWSResult getPanelControllerState();
-
-  /**
    * \brief A method for retrieving the operation mode of the controller.
    *
    * \return RWSResult containing the result.
