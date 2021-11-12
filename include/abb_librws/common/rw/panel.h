@@ -9,15 +9,25 @@ namespace abb :: rws :: rw
 {
     /**
      * \brief Robot controller state.
+     *
+     * The documentation strings are taken from https://developercenter.robotstudio.com/api/RWS?urls.primaryName=Panel%20Service
      */
     enum class ControllerState
     {
+        // The robot is starting up. It will shift to state motors off when it has started.
         init,
-        motorOn,
+        // The robot is in a standby state where there is no power to the robot's motors.
+        // The state has to be shifted to motors on before the robot can move.
         motorOff,
+        // The robot is ready to move, either by jogging or by running programs.
+        motorOn,
+        // The robot is stopped because the safety runchain is opened. For instance, a door to the robot's cell might be open.
         guardStop,
+        // The robot is stopped because emergency stop was activated.
         emergencyStop,
+        // The robot is ready to leave emergency stop state. The emergency stop is no longer activated, but the state transition isn't yet confirmed.
         emergencyStopReset,
+        // The robot is in a system failure state. Restart required.
         sysFail
     };
 
