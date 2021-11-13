@@ -44,4 +44,36 @@ namespace abb :: rws :: v1_0 :: rw
 
         return makeOperationMode(opmode);
     }
+
+
+    void PanelService::setControllerState(ControllerState state)
+    {
+        std::string uri = Resources::RW_PANEL_CTRLSTATE + "?" + Queries::ACTION_SETCTRLSTATE;
+        std::stringstream content;
+        content << "ctrl-state=" << state;
+
+        client_.httpPost(uri, content.str());
+    }
+
+
+    unsigned PanelService::getSpeedRatio()
+    {
+        std::string uri = "/rw/panel/speedratio";
+        RWSResult rws_result = parser_.parseString(client_.httpGet(uri).content());
+
+        return std::stoul(xmlFindTextContent(rws_result, XMLAttribute(Identifiers::CLASS, "speedratio")));
+    }
+
+
+    void PanelService::setSpeedRatio(unsigned int ratio)
+    {
+        if (ratio > 100)
+            BOOST_THROW_EXCEPTION(std::out_of_range {"Speed ratio argument out of range (should be 0 <= ratio <= 100)"});
+
+        std::string uri = "/rw/panel/speedratio?action=setspeedratio";
+        std::stringstream content;
+        content << "speed-ratio=" << ratio;
+
+        client_.httpPost(uri, content.str());
+    }
 }

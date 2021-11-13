@@ -47,11 +47,6 @@
 #include <iostream>
 
 
-namespace
-{
-static const char EXCEPTION_CREATE_STRING[]{"Failed to create string"};
-}
-
 namespace abb :: rws :: v1_0
 {
 using namespace Poco::Net;
@@ -192,11 +187,6 @@ RWSResult RWSClient::getRobotWareSystem()
   return parseContent(httpGet(uri));
 }
 
-RWSResult RWSClient::getSpeedRatio()
-{
-  std::string uri = "/rw/panel/speedratio";
-  return parseContent(httpGet(uri));
-}
 
 void RWSClient::setIOSignal(const std::string& iosignal, const std::string& value)
 {
@@ -212,36 +202,6 @@ void RWSClient::setIOSignal(const std::string& iosignal, const std::string& valu
     e << IoSignalErrorInfo {iosignal};
     throw;
   }
-}
-
-void RWSClient::setMotorsOn()
-{
-  std::string uri = Resources::RW_PANEL_CTRLSTATE + "?" + Queries::ACTION_SETCTRLSTATE;
-  std::string content = "ctrl-state=motoron";
-
-  httpPost(uri, content);
-}
-
-void RWSClient::setMotorsOff()
-{
-  std::string uri = Resources::RW_PANEL_CTRLSTATE + "?" + Queries::ACTION_SETCTRLSTATE;
-  std::string content = "ctrl-state=motoroff";
-
-  httpPost(uri, content);
-}
-
-void RWSClient::setSpeedRatio(unsigned int ratio)
-{
-  if(ratio > 100) throw std::out_of_range("Speed ratio argument out of range (should be 0 <= ratio <= 100)");
-
-  std::stringstream ss;
-  ss << ratio;
-  if(ss.fail()) throw std::runtime_error(EXCEPTION_CREATE_STRING);
-
-  std::string uri = "/rw/panel/speedratio?action=setspeedratio";
-  std::string content = "speed-ratio=" + ss.str();
-
-  httpPost(uri, content);
 }
 
 

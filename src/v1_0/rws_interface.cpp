@@ -771,17 +771,17 @@ void RWSInterface::resetRAPIDProgramPointer()
 
 void RWSInterface::setMotorsOn()
 {
-  rws_client_.setMotorsOn();
+  panel_.setControllerState(rw::ControllerState::motorOn);
 }
 
 void RWSInterface::setMotorsOff()
 {
-  rws_client_.setMotorsOff();
+  panel_.setControllerState(rw::ControllerState::motorOff);
 }
 
 void RWSInterface::setSpeedRatio(unsigned int ratio)
 {
-  rws_client_.setSpeedRatio(ratio);
+  panel_.setSpeedRatio(ratio);
 }
 
 std::vector<rw::RAPIDModuleInfo> RWSInterface::getRAPIDModulesInfo(const std::string& task)
@@ -796,15 +796,7 @@ std::vector<rw::RAPIDTaskInfo> RWSInterface::getRAPIDTasks()
 
 unsigned int RWSInterface::getSpeedRatio()
 {
-  unsigned int speed_ratio = 0;
-
-  RWSResult rws_result = rws_client_.getSpeedRatio();
-
-  std::stringstream ss(xmlFindTextContent(rws_result, XMLAttribute(Identifiers::CLASS, "speedratio")));
-  ss >> speed_ratio;
-  if(ss.fail()) throw std::runtime_error("Failed to parse the speed ratio");
-
-  return speed_ratio;
+  return panel_.getSpeedRatio();
 }
 
 SystemInfo RWSInterface::getSystemInfo()
