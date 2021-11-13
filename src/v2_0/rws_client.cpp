@@ -633,7 +633,7 @@ std::string RWSClient::getResourceURI(RAPIDResource const& resource) const
 
 std::string RWSClient::getResourceURI(ControllerStateResource const& resource) const
 {
-  BOOST_THROW_EXCEPTION(std::logic_error {"Not implemented"});
+  return "/rw/panel/ctrl-state";
 }
 
 
