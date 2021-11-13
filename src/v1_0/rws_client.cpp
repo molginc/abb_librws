@@ -198,12 +198,6 @@ RWSResult RWSClient::getSpeedRatio()
   return parseContent(httpGet(uri));
 }
 
-RWSResult RWSClient::getPanelOperationMode()
-{
-  std::string uri = Resources::RW_PANEL_OPMODE;
-  return parseContent(httpGet(uri));
-}
-
 void RWSClient::setIOSignal(const std::string& iosignal, const std::string& value)
 {
   try
@@ -511,6 +505,12 @@ std::string RWSClient::getResourceURI(RAPIDExecutionStateResource const&) const
 }
 
 
+std::string RWSClient::getResourceURI(OperationModeResource const&) const
+{
+  return "/rw/panel/opmode";
+}
+
+
 void RWSClient::processEvent(Poco::AutoPtr<Poco::XML::Document> doc, SubscriptionCallback& callback) const
 {
   // IMPORTANT: don't use AutoPtr<XML::Node> here! Otherwise you will get memory corruption.
@@ -549,6 +549,12 @@ void RWSClient::processEvent(Poco::AutoPtr<Poco::XML::Document> doc, Subscriptio
   {
     ControllerStateEvent event;
     event.state = rw::makeControllerState(xmlFindTextContent(li_node, XMLAttribute {"class", "ctrlstate"}));
+    callback.processEvent(event);
+  }
+  else if (class_attribute_value == "pnl-opmode-ev")
+  {
+    OperationModeEvent event;
+    event.mode = rw::makeOperationMode(xmlFindTextContent(li_node, XMLAttribute {"class", "opmode"}));
     callback.processEvent(event);
   }
   else

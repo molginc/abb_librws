@@ -643,6 +643,12 @@ std::string RWSClient::getResourceURI(RAPIDExecutionStateResource const&) const
 }
 
 
+std::string RWSClient::getResourceURI(OperationModeResource const&) const
+{
+  return "/rw/panel/opmode";
+}
+
+
 void RWSClient::processEvent(Poco::AutoPtr<Poco::XML::Document> doc, SubscriptionCallback& callback) const
 {
   // IMPORTANT: don't use AutoPtr<XML::Node> here! Otherwise you will get memory corruption.

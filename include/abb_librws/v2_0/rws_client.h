@@ -439,6 +439,7 @@ public:
   std::string getResourceURI(RAPIDResource const& resource) const override;
   std::string getResourceURI(RAPIDExecutionStateResource const&) const override;
   std::string getResourceURI(ControllerStateResource const&) const override;
+  std::string getResourceURI(OperationModeResource const&) const override;
   void processEvent(Poco::AutoPtr<Poco::XML::Document> content, SubscriptionCallback& callback) const override;
 
   /**

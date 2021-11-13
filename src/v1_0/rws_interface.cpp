@@ -834,9 +834,7 @@ SystemInfo RWSInterface::getSystemInfo()
 
 bool RWSInterface::isAutoMode()
 {
-  return compareSingleContent(rws_client_.getPanelOperationMode(),
-                              XMLAttributes::CLASS_OPMODE,
-                              ContollerStates::PANEL_OPERATION_MODE_AUTO);
+  return panel_.getOperationMode() == rw::OperationMode::automatic;
 }
 
 bool RWSInterface::isMotorsOn()

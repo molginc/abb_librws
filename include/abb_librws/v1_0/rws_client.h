@@ -193,15 +193,6 @@ public:
   RWSResult getSpeedRatio();
 
   /**
-   * \brief A method for retrieving the operation mode of the controller.
-   *
-   * \return RWSResult containing the result.
-   *
-   * \throw \a RWSError if something goes wrong.
-   */
-  RWSResult getPanelOperationMode();
-
-  /**
    * \brief A method for setting the value of an IO signal.
    *
    * \param iosignal for the IO signal's name.
@@ -308,6 +299,7 @@ public:
   std::string getResourceURI(RAPIDResource const& resource) const override;
   std::string getResourceURI(RAPIDExecutionStateResource const&) const override;
   std::string getResourceURI(ControllerStateResource const&) const override;
+  std::string getResourceURI(OperationModeResource const&) const override;
   void processEvent(Poco::AutoPtr<Poco::XML::Document> content, SubscriptionCallback& callback) const override;
 
 

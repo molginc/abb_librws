@@ -29,6 +29,16 @@ namespace abb :: rws :: v1_0 :: rw
          */
         ControllerState getControllerState();
 
+
+        /**
+         * \brief A method for retrieving the operation mode of the controller.
+         *
+         * \return RWSResult containing the result.
+         *
+         * \throw \a RWSError if something goes wrong.
+         */
+        OperationMode getOperationMode();
+
     private:
 
         RWSClient& client_;

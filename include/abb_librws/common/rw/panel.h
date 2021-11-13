@@ -45,4 +45,43 @@ namespace abb :: rws :: rw
      * \throw \a std::invalid_argument if \a str is not from the set of valid strings.
      */
     ControllerState makeControllerState(std::string const& str);
+
+
+    /**
+     * @brief Robot operation mode.
+     *
+     * The documentation strings are taken from https://developercenter.robotstudio.com/api/rwsApi/panel_opmode_get_page.html
+     */
+    enum class OperationMode
+    {
+        // State init
+        init,
+        // State change request for automatic mode
+        autoCh,
+        // State change request for manual mode & full speed
+        manFCh,
+        // State manual mode & reduced speed
+        manR,
+        // State manual mode & full speed
+        manF,
+        // State automatic mode
+        automatic,
+        // Undefined
+        undef
+    };
+
+
+    std::ostream& operator<<(std::ostream& os, OperationMode mode);
+
+
+    /**
+     * \brief Create \a OperationMode from string.
+     *
+     * \param str source string
+     *
+     * \return \a OperationMode matching the value of \a str
+     *
+     * \throw \a std::invalid_argument if \a str is not from the set of valid strings.
+     */
+    OperationMode makeOperationMode(std::string const& str);
 }
