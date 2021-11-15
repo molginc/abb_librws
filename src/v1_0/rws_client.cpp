@@ -40,6 +40,8 @@
 #include <abb_librws/parsing.h>
 
 #include <Poco/Net/HTTPRequest.h>
+#include <Poco/DOM/DOMWriter.h>
+#include <Poco/FileStream.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -633,6 +635,13 @@ std::string RWSClient::getResourceURI(RAPIDExecutionStateResource const&) const
 
 void RWSClient::processEvent(Poco::AutoPtr<Poco::XML::Document> doc, SubscriptionCallback& callback) const
 {
+  std::cerr << "Hello Antoine\n";
+  Poco::FileOutputStream writer("xml_output.log");
+  Poco::XML::DOMWriter out;
+  out.setOptions(3);
+  out.writeNode(std::cerr, doc);
+  std::cerr << "\n";
+
   // IMPORTANT: don't use AutoPtr<XML::Node> here! Otherwise you will get memory corruption.
   Poco::XML::Node const * li_node = doc->getNodeByPath("html/body/div/ul/li");
   if (!li_node)
