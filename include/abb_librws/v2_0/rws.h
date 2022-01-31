@@ -500,5 +500,33 @@ enum class Mastership
   Explicit
 };
 
-std::ostream& operator<<(std::ostream& os, Mastership mastership);
-}  // namespace abb::rws::v2_0
+  std::ostream& operator<<(std::ostream& os, MastershipDomain domain);
+
+
+  /// @brief Defines whether the mastership should be implicitly acquired when performing a request.
+  ///
+  enum class Mastership
+  {
+    Implicit,
+    Explicit
+  };
+
+
+  std::ostream& operator<<(std::ostream& os, Mastership mastership);
+
+
+  /**
+   * \brief Default port number for RWS communication.
+   */
+  extern const unsigned short DEFAULT_PORT_NUMBER;
+
+  /**
+   * \brief Default password (for unconfigured robot controller systems).
+   */
+  extern const std::string DEFAULT_PASSWORD;
+
+  /**
+   * \brief Default username (for unconfigured robot controller systems).
+   */
+  extern const std::string DEFAULT_USERNAME;
+}

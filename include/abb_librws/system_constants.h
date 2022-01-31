@@ -51,32 +51,6 @@ namespace rws
 struct SystemConstants
 {
   /**
-   * \brief Controller states related constants.
-   */
-  struct ABB_LIBRWS_EXPORT ContollerStates
-  {
-    /**
-     * \brief Robot controller motor on.
-     */
-    static const std::string CONTROLLER_MOTOR_ON;
-
-    /**
-     * \brief Robot controller motor off.
-     */
-    static const std::string CONTROLLER_MOTOR_OFF;
-
-    /**
-     * \brief Robot controller auto mode.
-     */
-    static const std::string PANEL_OPERATION_MODE_AUTO;
-
-    /**
-     * \brief RAPID running.
-     */
-    static const std::string RAPID_EXECUTION_RUNNING;
-  };
-
-  /**
    * \brief General constants.
    */
   struct ABB_LIBRWS_EXPORT General
@@ -90,21 +64,6 @@ struct SystemConstants
      * \brief Default location of an application using RWS.
      */
     static const std::string EXTERNAL_LOCATION;
-
-    /**
-     * \brief Default port number for RWS communication.
-     */
-    static const unsigned short DEFAULT_PORT_NUMBER;
-
-    /**
-     * \brief Default password (for unconfigured robot controller systems).
-     */
-    static const std::string DEFAULT_PASSWORD;
-
-    /**
-     * \brief Default username (for unconfigured robot controller systems).
-     */
-    static const std::string DEFAULT_USERNAME;
 
     /**
      * \brief Local user.
