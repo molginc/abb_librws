@@ -491,31 +491,20 @@ enum class MastershipDomain
   rapid
 };
 
-  /// @brief RWS 1.0 mastership domains.
-  ///
-  enum class MastershipDomain
-  {
-    cfg,
-    motion,
-    rapid
-  };
+std::ostream& operator<<(std::ostream& os, MastershipDomain domain);
 
+/**
+ * \brief Default port number for RWS communication.
+ */
+extern const unsigned short DEFAULT_PORT_NUMBER;
 
-  std::ostream& operator<<(std::ostream& os, MastershipDomain domain);
+/**
+ * \brief Default password (for unconfigured robot controller systems).
+ */
+extern const std::string DEFAULT_PASSWORD;
 
-
-  /**
-   * \brief Default port number for RWS communication.
-   */
-  extern const unsigned short DEFAULT_PORT_NUMBER;
-
-  /**
-   * \brief Default password (for unconfigured robot controller systems).
-   */
-  extern const std::string DEFAULT_PASSWORD;
-
-  /**
-   * \brief Default username (for unconfigured robot controller systems).
-   */
-  extern const std::string DEFAULT_USERNAME;
-}
+/**
+ * \brief Default username (for unconfigured robot controller systems).
+ */
+extern const std::string DEFAULT_USERNAME;
+}  // namespace abb::rws::v1_0
