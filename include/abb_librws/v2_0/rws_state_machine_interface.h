@@ -34,14 +34,11 @@
  ***********************************************************************************************************************
  */
 
-#ifndef RWS_STATE_MACHINE_INTERFACE_H
-#define RWS_STATE_MACHINE_INTERFACE_H
+#pragma once
 
-#include <abb_librws/v1_0/rws_interface.h>
+#include <abb_librws/v2_0/rws_interface.h>
 
-namespace abb
-{
-namespace rws
+namespace abb ::rws ::v2_0
 {
 /**
  * \brief User friendly interface to ABB robot controller systems, which are based on a corresponding RobotWare AddIn.
@@ -55,7 +52,7 @@ namespace rws
  *       - If the RobotWare option Externally Guided Motion (EGM) is present.
  *       - If the SmartGripper (SG) product is present.
  */
-class RWSStateMachineInterface : public v1_0::RWSInterface
+class RWSStateMachineInterface : public v2_0::RWSInterface
 {
 private:
   /**
@@ -69,11 +66,11 @@ public:
    */
   enum States
   {
-    STATE_IDLE,              ///< \brief Idle state.
-    STATE_INITIALIZE,        ///< \brief Initialization state.
-    STATE_RUN_RAPID_ROUTINE, ///< \brief Running RAPID routine state.
-    STATE_RUN_EGM_ROUTINE,   ///< \brief Running EGM routine state.
-    STATE_UNKNOWN            ///< \brief Unknown state.
+    STATE_IDLE,               ///< \brief Idle state.
+    STATE_INITIALIZE,         ///< \brief Initialization state.
+    STATE_RUN_RAPID_ROUTINE,  ///< \brief Running RAPID routine state.
+    STATE_RUN_EGM_ROUTINE,    ///< \brief Running EGM routine state.
+    STATE_UNKNOWN             ///< \brief Unknown state.
   };
 
   /**
@@ -83,10 +80,10 @@ public:
    */
   enum EGMActions
   {
-    EGM_ACTION_STOP,      ///< \brief Stop action.
-    EGM_ACTION_RUN_JOINT, ///< \brief Joint action.
-    EGM_ACTION_RUN_POSE,  ///< \brief Pose action.
-    EGM_ACTION_UNKNOWN    ///< \brief Unknown action.
+    EGM_ACTION_STOP,       ///< \brief Stop action.
+    EGM_ACTION_RUN_JOINT,  ///< \brief Joint action.
+    EGM_ACTION_RUN_POSE,   ///< \brief Pose action.
+    EGM_ACTION_UNKNOWN     ///< \brief Unknown action.
   };
 
   /**
@@ -96,20 +93,20 @@ public:
    */
   enum SGCommands
   {
-    SG_COMMAND_NONE,         ///< \brief No command.
-    SG_COMMAND_INITIALIZE,   ///< \brief Initialize command.
-    SG_COMMAND_CALIBRATE,    ///< \brief Calibrate command.
-    SG_COMMAND_MOVE_TO,      ///< \brief Move command.
-    SG_COMMAND_GRIP_IN,      ///< \brief Inwards grip command.
-    SG_COMMAND_GRIP_OUT,     ///< \brief Outwards grip command.
-    SG_COMMAND_BLOW_ON_1,    ///< \brief Blow on 1 command.
-    SG_COMMAND_BLOW_ON_2,    ///< \brief Blow on 2 command.
-    SG_COMMAND_BLOW_OFF_1,   ///< \brief Blow off 1 command.
-    SG_COMMAND_BLOW_OFF_2,   ///< \brief Blow off 2 command.
-    SG_COMMAND_VACUUM_ON_1,  ///< \brief Vacuum on 1 command.
-    SG_COMMAND_VACUUM_ON_2,  ///< \brief Vacuum on 2 command.
-    SG_COMMAND_VACUUM_OFF_1, ///< \brief Vacuum off 1 command.
-    SG_COMMAND_VACUUM_OFF_2  ///< \brief Vacuum off 2 command.
+    SG_COMMAND_NONE,          ///< \brief No command.
+    SG_COMMAND_INITIALIZE,    ///< \brief Initialize command.
+    SG_COMMAND_CALIBRATE,     ///< \brief Calibrate command.
+    SG_COMMAND_MOVE_TO,       ///< \brief Move command.
+    SG_COMMAND_GRIP_IN,       ///< \brief Inwards grip command.
+    SG_COMMAND_GRIP_OUT,      ///< \brief Outwards grip command.
+    SG_COMMAND_BLOW_ON_1,     ///< \brief Blow on 1 command.
+    SG_COMMAND_BLOW_ON_2,     ///< \brief Blow on 2 command.
+    SG_COMMAND_BLOW_OFF_1,    ///< \brief Blow off 1 command.
+    SG_COMMAND_BLOW_OFF_2,    ///< \brief Blow off 2 command.
+    SG_COMMAND_VACUUM_ON_1,   ///< \brief Vacuum on 1 command.
+    SG_COMMAND_VACUUM_ON_2,   ///< \brief Vacuum on 2 command.
+    SG_COMMAND_VACUUM_OFF_1,  ///< \brief Vacuum off 1 command.
+    SG_COMMAND_VACUUM_OFF_2   ///< \brief Vacuum off 2 command.
   };
 
   /**
@@ -381,9 +378,7 @@ public:
    */
   struct EGMSetupUCSettings : public RAPIDRecord
   {
-    EGMSetupUCSettings()
-    :
-    RAPIDRecord("EGMSetupUCSettings")
+    EGMSetupUCSettings() : RAPIDRecord("EGMSetupUCSettings")
     {
       components_.push_back(&use_filtering);
       components_.push_back(&comm_timeout);
@@ -412,9 +407,7 @@ public:
     /**
      * \brief A default constructor.
      */
-    EGMActivateSettings()
-    :
-    RAPIDRecord("EGMActivateSettings")
+    EGMActivateSettings() : RAPIDRecord("EGMActivateSettings")
     {
       components_.push_back(&tool);
       components_.push_back(&wobj);
@@ -431,9 +424,7 @@ public:
      *
      * \param other containing the values to copy.
      */
-    EGMActivateSettings(const EGMActivateSettings& other)
-    :
-    RAPIDRecord(other.record_type_name_)
+    EGMActivateSettings(const EGMActivateSettings& other) : RAPIDRecord(other.record_type_name_)
     {
       if (this != &other)
       {
@@ -517,9 +508,7 @@ public:
     /**
      * \brief A default constructor.
      */
-    EGMRunSettings()
-    :
-    RAPIDRecord("EGMRunSettings")
+    EGMRunSettings() : RAPIDRecord("EGMRunSettings")
     {
       components_.push_back(&cond_time);
       components_.push_back(&ramp_in_time);
@@ -532,9 +521,7 @@ public:
      *
      * \param other containing the values to copy.
      */
-    EGMRunSettings(const EGMRunSettings& other)
-    :
-    RAPIDRecord(other.record_type_name_)
+    EGMRunSettings(const EGMRunSettings& other) : RAPIDRecord(other.record_type_name_)
     {
       if (this != &other)
       {
@@ -581,9 +568,7 @@ public:
     /**
      * \brief A default constructor.
      */
-    EGMStopSettings()
-    :
-    RAPIDRecord("EGMStopSettings")
+    EGMStopSettings() : RAPIDRecord("EGMStopSettings")
     {
       components_.push_back(&ramp_out_time);
     }
@@ -602,9 +587,7 @@ public:
     /**
      * \brief A default constructor.
      */
-    EGMSettings()
-    :
-    RAPIDRecord("EGMSettings")
+    EGMSettings() : RAPIDRecord("EGMSettings")
     {
       components_.push_back(&allow_egm_motions);
       components_.push_back(&use_presync);
@@ -619,9 +602,7 @@ public:
      *
      * \param other containing the values to copy.
      */
-    EGMSettings(const EGMSettings& other)
-    :
-    RAPIDRecord(other.record_type_name_)
+    EGMSettings(const EGMSettings& other) : RAPIDRecord(other.record_type_name_)
     {
       if (this != &other)
       {
@@ -682,9 +663,7 @@ public:
     /**
      * \brief A default constructor.
      */
-    SGSettings()
-    :
-    RAPIDRecord("SGSettings")
+    SGSettings() : RAPIDRecord("SGSettings")
     {
       components_.push_back(&max_speed);
       components_.push_back(&hold_force);
@@ -712,18 +691,19 @@ public:
    *
    * \param client RWS client.
    */
-  RWSStateMachineInterface(v1_0::RWSClient& client)
-  :
-  RWSInterface {client},
-  services_(this)
-  {}
+  RWSStateMachineInterface(v2_0::RWSClient& client) : RWSInterface{ client }, services_(this)
+  {
+  }
 
   /**
    * \brief Services provided by the StateMachine AddIn.
    *
    * Note: I.e. a representation of RAPID modules, and related configurations, loaded by the AddIn.
    */
-  const Services& services() const { return services_; }
+  const Services& services() const
+  {
+    return services_;
+  }
 
 private:
   /**
@@ -771,44 +751,62 @@ private:
      * \param p_rws_interface for the RWS interface instance.
      */
     Services(RWSStateMachineInterface* p_rws_interface)
-    :
-    egm_(p_rws_interface),
-    main_(p_rws_interface),
-    rapid_(p_rws_interface),
-    sg_(p_rws_interface),
-    utility_(p_rws_interface),
-    watchdog_(p_rws_interface)
-    {}
+      : egm_(p_rws_interface)
+      , main_(p_rws_interface)
+      , rapid_(p_rws_interface)
+      , sg_(p_rws_interface)
+      , utility_(p_rws_interface)
+      , watchdog_(p_rws_interface)
+    {
+    }
 
     /**
      * \brief EGM services provided by the StateMachine AddIn.
      */
-    const EGM& egm() const { return egm_; }
+    const EGM& egm() const
+    {
+      return egm_;
+    }
 
     /**
      * \brief Main services provided by the StateMachine AddIn.
      */
-    const Main& main() const { return main_; }
+    const Main& main() const
+    {
+      return main_;
+    }
 
     /**
      * \brief RAPID services provided by the StateMachine AddIn.
      */
-    const RAPID& rapid() const { return rapid_; }
+    const RAPID& rapid() const
+    {
+      return rapid_;
+    }
 
     /**
      * \brief SmartGripper services provided by the StateMachine AddIn.
      */
-    const SG& sg() const { return sg_; }
+    const SG& sg() const
+    {
+      return sg_;
+    }
 
     /**
      * \brief Utility services provided by the StateMachine AddIn.
      */
-    const Utility& utility() const { return utility_; }
+    const Utility& utility() const
+    {
+      return utility_;
+    }
 
     /**
      * \brief Watchdog services provided by the StateMachine AddIn.
      */
-    const Watchdog& watchdog() const { return watchdog_; }
+    const Watchdog& watchdog() const
+    {
+      return watchdog_;
+    }
 
   private:
     /**
@@ -824,7 +822,9 @@ private:
        *
        * \param p_rws_interface for the RWS interface instance.
        */
-      EGM(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface) {}
+      EGM(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface)
+      {
+      }
 
       /**
        * \brief Get the current EGM action.
@@ -894,7 +894,9 @@ private:
        *
        * \param p_rws_interface for the RWS interface instance.
        */
-      Main(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface) {}
+      Main(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface)
+      {
+      }
 
       /**
        * \brief Get the current state.
@@ -941,7 +943,9 @@ private:
        *
        * \param p_rws_interface for the RWS interface instance.
        */
-      RAPID(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface) {}
+      RAPID(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface)
+      {
+      }
 
       /**
        * \brief Request the execution of the predefined RAPID procedure "runCallByVar".
@@ -950,8 +954,7 @@ private:
        * \param routine_name specifying routine name.
        * \param routine_number specifying routine number.
        */
-      void runCallByVar(const std::string& task,
-                        const std::string& routine_name,
+      void runCallByVar(const std::string& task, const std::string& routine_name,
                         const unsigned int routine_number) const;
 
       /**
@@ -1036,7 +1039,9 @@ private:
        *
        * \param p_rws_interface for the RWS interface instance.
        */
-      SG(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface) {}
+      SG(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface)
+      {
+      }
 
       /**
        * \brief Request turning off both SmartGrippers' first blow.
@@ -1339,7 +1344,9 @@ private:
        *
        * \param p_rws_interface for the RWS interface instance.
        */
-      Utility(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface) {}
+      Utility(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface)
+      {
+      }
 
       /**
        * \brief Get a motion task's base frame, extracted during initialization of the task.
@@ -1375,7 +1382,9 @@ private:
        *
        * \param p_rws_interface for the RWS interface instance.
        */
-      Watchdog(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface) {}
+      Watchdog(RWSStateMachineInterface* p_rws_interface) : p_rws_interface_(p_rws_interface)
+      {
+      }
 
       /**
        * \brief Checks if the watchdog is active or not.
@@ -1456,7 +1465,4 @@ private:
   Services services_;
 };
 
-} // end namespace rws
-} // end namespace abb
-
-#endif
+}  // namespace abb::rws::v2_0

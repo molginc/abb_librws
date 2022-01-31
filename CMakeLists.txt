@@ -42,7 +42,6 @@ set(
     src/rws_poco_client.cpp
     src/rws_poco_result.cpp
     src/rws_rapid.cpp
-    src/rws_state_machine_interface.cpp
     src/rws_subscription.cpp
     src/rws_websocket.cpp
     src/rws.cpp
@@ -58,12 +57,14 @@ set(
     src/v1_0/rw/rapid.cpp
     src/v1_0/rw/panel.cpp
     src/v1_0/rw/io.cpp
+    src/v1_0/rws_state_machine_interface.cpp
 
     src/v2_0/rws.cpp
     src/v2_0/rws_client.cpp
     src/v2_0/rws_interface.cpp
     src/v2_0/rw/rapid.cpp
     src/v2_0/rw/panel.cpp
+    src/v2_0/rws_state_machine_interface.cpp
 )
 
 add_library(${PROJECT_NAME} ${SRC_FILES})

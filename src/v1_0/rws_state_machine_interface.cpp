@@ -34,11 +34,9 @@
  ***********************************************************************************************************************
  */
 
-#include "abb_librws/rws_state_machine_interface.h"
+#include "abb_librws/v1_0/rws_state_machine_interface.h"
 
-namespace abb
-{
-namespace rws
+namespace abb ::rws ::v1_0
 {
 /***********************************************************************************************************************
  * Struct definitions: RWSStateMachineInterface::ResourceIdentifiers
@@ -728,5 +726,4 @@ void RWSStateMachineInterface::toggleIOSignal(const std::string& iosignal)
     throw std::runtime_error("RWSStateMachineInterface::toggleIOSignal() failed");
 }
 
-}  // end namespace rws
-}  // end namespace abb
+}  // namespace abb::rws::v1_0

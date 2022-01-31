@@ -47,8 +47,7 @@
 #include <chrono>
 #include <cstdint>
 
-
-namespace abb :: rws :: v2_0
+namespace abb ::rws ::v2_0
 {
 /**
  * \brief User-friendly interface to Robot Web Services (RWS) 2.0.
@@ -147,14 +146,12 @@ public:
    */
   ABB_LIBRWS_DEPRECATED std::vector<RobotWareOptionInfo> getPresentRobotWareOptions();
 
-
   /// @brief Get value of a digital signal
   ///
   /// @param signal_name Name of the signal
   /// @return Value of the requested digital signal
   ///
   bool getDigitalSignal(std::string const& signal_name);
-
 
   /// @brief Get value of an analog signal
   ///
@@ -163,7 +160,6 @@ public:
   ///
   float getAnalogSignal(std::string const& signal_name);
 
-
   /// @brief Get value of a group signal
   ///
   /// @param signal_name Name of the signal
@@ -171,14 +167,12 @@ public:
   ///
   std::uint32_t getGroupSignal(std::string const& signal_name);
 
-
   /**
    * \brief Get values of all IO signals.
    *
    * \return Mapping from IO signal names to values.
    */
   rw::io::IOSignalInfo getIOSignals();
-
 
   /**
    * \brief A method for retrieving static information about a mechanical unit.
@@ -225,10 +219,60 @@ public:
    *
    * \return robtarget data.
    */
-  RobTarget getMechanicalUnitRobTarget(const std::string& mechunit,
-                                  Coordinate coordinate = Coordinate::ACTIVE,
-                                  const std::string& tool = "",
-                                  const std::string& wobj = "");
+  RobTarget getMechanicalUnitRobTarget(const std::string& mechunit, Coordinate coordinate = Coordinate::ACTIVE,
+                                       const std::string& tool = "", const std::string& wobj = "");
+
+  /**
+   * \brief A method for retrieving the data of a RAPID symbol in raw text format.
+   *
+   * See the corresponding "setRAPIDSymbolData(...)" method for examples of RAPID symbols in raw text format.
+   *
+   * \param task name of the RAPID task containing the RAPID symbol.
+   * \param module name of the RAPID module containing the RAPID symbol.
+   * \param name name of the RAPID symbol.
+   *
+   * \return std::string containing the data. Empty if not found.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  std::string getRAPIDSymbolData(const std::string& task, const std::string& module, const std::string& name);
+
+  /**
+   * \brief Retrieves the data of a RAPID symbol (parsed into a struct representing the RAPID data).
+   *
+   * \param resource specifies the RAPID task, module and symbol name.
+   * \param data for storing the retrieved RAPID symbol data.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void getRAPIDSymbolData(RAPIDResource const& resource, RAPIDSymbolDataAbstract& data);
+
+  /**
+   * \brief A method for retrieving information about the RAPID modules of a RAPID task defined in the robot controller.
+   *
+   * \return \a std::vector<RAPIDModuleInfo> containing the RAPID modules information.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  std::vector<rw::RAPIDModuleInfo> getRAPIDModulesInfo(const std::string& task);
+
+  /**
+   * \brief A method for retrieving information about the RAPID tasks defined in the robot controller.
+   *
+   * \return \a std::vector<RAPIDTaskInfo> containing the RAPID tasks information.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  std::vector<rw::RAPIDTaskInfo> getRAPIDTasks();
+
+  /**
+   * \brief A method for retrieving the robot controller's speed ratio for RAPID motions (e.g. MoveJ and MoveL).
+   *
+   * \return unsigned int with the speed ratio in the range [0, 100] (ie: inclusive).
+   *
+   * \throw \a std::runtime_error if failed to get or parse the speed ratio.
+   */
+  unsigned int getSpeedRatio();
 
   /**
    * \brief A method for retrieving some system information from the robot controller.
@@ -239,13 +283,39 @@ public:
    */
   SystemInfo getSystemInfo();
 
+  /**
+   * \brief A method for checking if the robot controller mode is in auto mode.
+   *
+   * \return if the mode is auto or not.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  bool isAutoMode();
+
+  /**
+   * \brief A method for checking if the motors are on.
+   *
+   * \return if the motors are on or not.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  bool isMotorsOn();
+
+  /**
+   * \brief A method for checking if RAPID is running.
+   *
+   * \return if RAPID is running or not.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  bool isRAPIDRunning();
+
   /// @brief Set value of a digital signal
   ///
   /// @param signal_name Name of the signal
   /// @param value New value of the signal
   ///
   void setDigitalSignal(std::string const& signal_name, bool value);
-
 
   /// @brief Set value of an analog signal
   ///
@@ -254,13 +324,126 @@ public:
   ///
   void setAnalogSignal(std::string const& signal_name, float value);
 
-
   /// @brief Set value of a group signal
   ///
   /// @param signal_name Name of the signal
   /// @param value New value of the signal
   ///
   void setGroupSignal(std::string const& signal_name, std::uint32_t value);
+
+  /**
+   * \brief A method for setting the data of a RAPID symbol via raw text format.
+   *
+   * Examples of RAPID symbols in raw text format:
+   * - num: "1" or "-2.5".
+   * - bool: "TRUE" or "FALSE".
+   * - pos: "[1, -2, 3.3]".
+   * - jointtarget: "[[1, -2, 3.3, -4.4, 5, 6], [9E9, 9E9, 9E9, 9E9, 9E9, 9E9]]"
+   *
+   * Notes:
+   * - The absence of square brackets implies the symbol is of atomic data type.
+   * - Record data types (composed of subcomponents) are always enclosed in square brackets.
+   * - The value '9E9', in the jointtarget record, mean that the joint is not in use.
+   *
+   * Please see the "Technical reference manual - RAPID overview"
+   * (document ID: 3HAC050947-001, revision: K) for more information
+   * about basic RAPID data types and programming.
+   *
+   * \param task name of the RAPID task containing the RAPID symbol.
+   * \param module name of the RAPID module containing the RAPID symbol.
+   * \param name the name of the RAPID symbol.
+   * \param data containing the RAPID symbol's new data.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void setRAPIDSymbolData(const std::string& task, const std::string& module, const std::string& name,
+                          const std::string& data);
+
+  /**
+   * \brief A method for setting the data of a RAPID symbol.
+   *
+   * \param resource identifying the RAPID symbol.
+   * \param data containing the RAPID symbol's new data.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void setRAPIDSymbolData(RAPIDResource const& resource, const RAPIDSymbolDataAbstract& data);
+
+  /**
+   * \brief A method for starting RAPID execution in the robot controller.
+   *
+   * There can be a delay between the function returns and when the RAPID program enters the "running" state.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void startRAPIDExecution();
+
+  /**
+   * \brief A method for stopping RAPID execution in the robot controller.
+   *
+   * https://developercenter.robotstudio.com/api/rwsApi/rapid_execution_stop_page.html
+   *
+   * There can be a delay between the function returns and when the RAPID program enters the "stopped" state.
+   *
+   * \param stopmode stop mode
+   * \param usetsp which tasks to stop (?)
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void stopRAPIDExecution(StopMode stopmode = StopMode::stop, UseTsp usetsp = UseTsp::normal);
+
+  /**
+   * \brief A method for reseting the RAPID program pointer in the robot controller.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void resetRAPIDProgramPointer();
+
+  /**
+   * \brief A method for turning on the robot controller's motors.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void setMotorsOn();
+
+  /**
+   * \brief A method for turning off the robot controller's motors.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void setMotorsOff();
+
+  /**
+   * \brief A method for setting the robot controller's speed ratio for RAPID motions (e.g. MoveJ and MoveL).
+   *
+   * Note: The ratio must be an integer in the range [0, 100] (ie: inclusive).
+   *
+   * \param ratio specifying the new ratio.
+   *
+   * \throw \a std::runtime_error if something goes wrong.
+   */
+  void setSpeedRatio(unsigned int ratio);
+
+  /**
+   * \brief A method for loading a module to the robot controller.
+   *
+   * \param task specifying the RAPID task.
+   * \param resource specifying the file's directory and name.
+   * \param replace indicating if the actual module into the controller must be replaced by the new one or not.
+   *
+   * \throw \a std::exception if something goes wrong.
+   */
+  void loadModuleIntoTask(const std::string& task, const FileResource& resource, const bool replace = false);
+
+  /**
+   * \brief A method for unloading a module to the robot controller.
+   *
+   * \param task specifying the RAPID task.
+   * \param resource specifying the file's directory and name.
+   *
+   * \throw \a std::exception if something goes wrong.
+   */
+  void unloadModuleFromTask(const std::string& task, const FileResource& resource);
 
   /**
    * \brief A method for retrieving a file from the robot controller.
@@ -348,7 +531,6 @@ public:
 private:
   using RWSResult = RWSClient::RWSResult;
 
-
   /**
    * \brief A method for comparing a single text content (from a XML document node) with a specific string value.
    *
@@ -358,9 +540,8 @@ private:
    *
    * \return The result of the comparison.
    */
-  static bool compareSingleContent(const RWSResult& rws_result,
-                               const XMLAttribute& attribute,
-                               const std::string& compare_string);
+  static bool compareSingleContent(const RWSResult& rws_result, const XMLAttribute& attribute,
+                                   const std::string& compare_string);
 
   /**
    * \brief A method for retrieving the value if an IO signal.
@@ -370,7 +551,6 @@ private:
    * \return std::string containing the IO signal's value (empty if not found).
    */
   std::string getIOSignal(const std::string& iosignal);
-
 
   /**
    * \brief A method for setting the value of an IO signal.
@@ -382,11 +562,10 @@ private:
    */
   void setIOSignal(const std::string& iosignal, const std::string& value);
 
-
   /**
    * \brief The RWS client used to communicate with the robot controller.
    */
   RWSClient& rws_client_;
 };
 
-} // end namespace rws
+}  // namespace abb::rws::v2_0

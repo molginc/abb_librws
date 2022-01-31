@@ -35,6 +35,7 @@
  */
 #include <abb_librws/v2_0/rws_interface.h>
 #include <abb_librws/v2_0/rw/rapid.h>
+#include <abb_librws/v2_0/rw/panel.h>
 #include <abb_librws/v2_0/rws.h>
 #include <abb_librws/rws_rapid.h>
 #include <abb_librws/parsing.h>
@@ -43,6 +44,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <iostream>
 
 namespace
 {
@@ -52,7 +54,6 @@ static const char EXCEPTION_PARSE_CFG[]{ "Failed to parse configuration instance
 
 namespace abb ::rws ::v2_0
 {
-
 typedef SystemConstants::RAPID RAPID;
 
 static bool digitalSignalToBool(std::string const& value)
@@ -738,6 +739,62 @@ RobTarget RWSInterface::getMechanicalUnitRobTarget(const std::string& mechunit, 
   return robtarget;
 }
 
+void RWSInterface::setRAPIDSymbolData(const std::string& task, const std::string& module, const std::string& name,
+                                      const std::string& data)
+{
+  rw::rapid::setRAPIDSymbolData(rws_client_, RAPIDResource(task, module, name), data);
+}
+
+void RWSInterface::setRAPIDSymbolData(RAPIDResource const& resource, const RAPIDSymbolDataAbstract& data)
+{
+  rw::rapid::setRAPIDSymbolData(rws_client_, resource, data);
+}
+
+void RWSInterface::startRAPIDExecution()
+{
+  rw::rapid::startRAPIDExecution(rws_client_);
+}
+
+void RWSInterface::stopRAPIDExecution(StopMode stopmode, UseTsp usetsp)
+{
+  rw::rapid::stopRAPIDExecution(rws_client_, stopmode, usetsp);
+}
+
+void RWSInterface::resetRAPIDProgramPointer()
+{
+  rw::rapid::resetRAPIDProgramPointer(rws_client_);
+}
+
+void RWSInterface::setMotorsOn()
+{
+  rw::panel::setControllerState(rws_client_, rw::ControllerState::motorOn);
+}
+
+void RWSInterface::setMotorsOff()
+{
+  rw::panel::setControllerState(rws_client_, rw::ControllerState::motorOff);
+}
+
+void RWSInterface::setSpeedRatio(unsigned int ratio)
+{
+  rw::panel::setSpeedRatio(rws_client_, ratio);
+}
+
+std::vector<rw::RAPIDModuleInfo> RWSInterface::getRAPIDModulesInfo(const std::string& task)
+{
+  return rw::rapid::getRAPIDModulesInfo(rws_client_, task);
+}
+
+std::vector<rw::RAPIDTaskInfo> RWSInterface::getRAPIDTasks()
+{
+  return rw::rapid::getRAPIDTasks(rws_client_);
+}
+
+unsigned int RWSInterface::getSpeedRatio()
+{
+  return rw::panel::getSpeedRatio(rws_client_);
+}
+
 SystemInfo RWSInterface::getSystemInfo()
 {
   SystemInfo result;
@@ -745,11 +802,14 @@ SystemInfo RWSInterface::getSystemInfo()
   RWSResult rws_result = rws_client_.getRobotWareSystem();
 
   std::vector<Poco::XML::Node*> node_list = xmlFindNodes(rws_result, XMLAttributes::CLASS_SYS_SYSTEM_LI);
+
   for (size_t i = 0; i < node_list.size(); ++i)
   {
     result.system_name = xmlFindTextContent(node_list.at(i), XMLAttributes::CLASS_NAME);
     result.robot_ware_version = xmlFindTextContent(node_list.at(i), XMLAttributes::CLASS_RW_VERSION_NAME);
   }
+
+  // throw std::runtime_error(result.robot_ware_version);
 
   node_list = xmlFindNodes(rws_result, XMLAttributes::CLASS_SYS_OPTION_LI);
   for (size_t i = 0; i < node_list.size(); ++i)
@@ -762,9 +822,35 @@ SystemInfo RWSInterface::getSystemInfo()
   return result;
 }
 
+bool RWSInterface::isAutoMode()
+{
+  return rw::panel::getOperationMode(rws_client_) == rw::OperationMode::automatic;
+}
+
+bool RWSInterface::isMotorsOn()
+{
+  return rw::panel::getControllerState(rws_client_) == rw::ControllerState::motorOn;
+}
+
+bool RWSInterface::isRAPIDRunning()
+{
+  return rw::rapid::getRAPIDExecution(rws_client_).ctrlexecstate == rw::RAPIDExecutionState::running;
+}
+
 void RWSInterface::setIOSignal(const std::string& iosignal, const std::string& value)
 {
   rws_client_.setIOSignal(iosignal, value);
+}
+
+std::string RWSInterface::getRAPIDSymbolData(const std::string& task, const std::string& module,
+                                             const std::string& name)
+{
+  return rw::rapid::getRAPIDSymbolData(rws_client_, RAPIDResource(task, module, name));
+}
+
+void RWSInterface::getRAPIDSymbolData(RAPIDResource const& resource, RAPIDSymbolDataAbstract& data)
+{
+  rw::rapid::getRAPIDSymbolData(rws_client_, resource, data);
 }
 
 std::string RWSInterface::getFile(const FileResource& resource)
