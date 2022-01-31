@@ -236,8 +236,8 @@ public:
    * \throw \a RWSError if something goes wrong.
    */
   void registerLocalUser(const std::string& username = DEFAULT_USERNAME,
-                              const std::string& application = SystemConstants::General::EXTERNAL_APPLICATION,
-                              const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
+                         const std::string& application = SystemConstants::General::EXTERNAL_APPLICATION,
+                         const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
 
   /**
    * \brief A method for registering a user as remote.
@@ -249,8 +249,8 @@ public:
    * \throw \a RWSError if something goes wrong.
    */
   void registerRemoteUser(const std::string& username = DEFAULT_USERNAME,
-                               const std::string& application = SystemConstants::General::EXTERNAL_APPLICATION,
-                               const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
+                          const std::string& application = SystemConstants::General::EXTERNAL_APPLICATION,
+                          const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
 
   // SubscriptionManager implementation
   std::string openSubscription(std::vector<std::pair<std::string, SubscriptionPriority>> const& resources) override;
