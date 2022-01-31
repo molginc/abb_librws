@@ -7,6 +7,7 @@
 
 namespace abb ::rws ::v2_0
 {
+// clang-format off
   const unsigned short DEFAULT_PORT_NUMBER = 443;
   const std::string DEFAULT_PASSWORD       = "robotics";
   const std::string DEFAULT_USERNAME       = "Default User";
@@ -77,6 +78,7 @@ namespace abb ::rws ::v2_0
   const std::string Resources::RW_RAPID_SYMBOL_PROPERTIES_RAPID = Services::RW + "/rapid/symbol/RAPID";   // TODO merge with symbol data
   const std::string Resources::RW_RAPID_TASKS                   = Services::RW + "/rapid/tasks";
   const std::string Resources::RW_SYSTEM                        = Services::RW + "/system";
+// clang-format on
 
 const XMLAttribute XMLAttributes::CLASS_ACTIVE(Identifiers::CLASS, Identifiers::ACTIVE);
 const XMLAttribute XMLAttributes::CLASS_CFG_DT_INSTANCE_LI(Identifiers::CLASS, Identifiers::CFG_DT_INSTANCE_LI);
