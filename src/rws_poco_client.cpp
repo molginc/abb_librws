@@ -97,6 +97,7 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
 
   HTTPRequest request(method, uri, HTTPRequest::HTTP_1_1);
   request.add("accept", "application/xhtml+xml;v=2.0");
+  request.add("Connection", "close");     //[FA]  request to close the connection after the response is received
   request.setCookies(cookies_);
   request.setContentLength(content.length());
 
