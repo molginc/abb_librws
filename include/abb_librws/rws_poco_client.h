@@ -110,6 +110,12 @@ public:
    */
   POCOResult httpDelete(const std::string& uri);
 
+  void setTimeout(const Poco::Int64 timeout)
+  {
+    http_client_session_.setTimeout(Poco::Timespan(timeout));
+    http_client_session_.reset();
+  }
+
   /**
    * \brief A method for connecting a WebSocket.
    *

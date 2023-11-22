@@ -10,7 +10,7 @@ namespace abb ::rws ::v2_0
 // clang-format off
 const unsigned short DEFAULT_PORT_NUMBER                      = 443;
 const std::string DEFAULT_PASSWORD                            = "robotics";
-const std::string DEFAULT_USERNAME                            = "Default User";
+const std::string DEFAULT_USERNAME                            = "admin";
 
 const std::string Identifiers::ACTIVE                         = "active";
 const std::string Identifiers::ARM                            = "arm";
