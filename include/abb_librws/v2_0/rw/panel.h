@@ -21,9 +21,9 @@ namespace abb :: rws :: v2_0 :: rw :: panel
      */
     struct OperationModeSubscribableResource: public SubscribableResource
     {
-        std::string getURI() const override;
+        [[nodiscard]] std::string getURI() const override;
 
-        void processEvent(Poco::XML::Element const& li_element, SubscriptionCallback& callback) const override;
+        void processEvent(Poco::XML::Element const& li_element, std::function<void(SubscriptionEvent const&)> const& callback) const override;
     };
 
 
@@ -32,9 +32,20 @@ namespace abb :: rws :: v2_0 :: rw :: panel
      */
     struct ControllerStateSubscribableResource: public SubscribableResource
     {
-        std::string getURI() const override;
+        [[nodiscard]] std::string getURI() const override;
 
-        void processEvent(Poco::XML::Element const& li_element, SubscriptionCallback& callback) const override;
+        void processEvent(Poco::XML::Element const& li_element, std::function<void(SubscriptionEvent const&)> const& callback) const override;
+    };
+
+
+    /**
+     * \brief Controller speed override subscription resource
+     */
+    struct SpeedRatioSubscribableResource: public SubscribableResource
+    {
+        [[nodiscard]] std::string getURI() const override;
+
+        void processEvent(Poco::XML::Element const& li_element, std::function<void(SubscriptionEvent const&)> const& callback) const override;
     };
 
 
@@ -92,11 +103,12 @@ namespace abb :: rws :: v2_0 :: rw :: panel
      *
      * \param client RWS client
      * \param ratio specifying the new ratio.
+     * \param mastership {implicit | explicit} by default mastership is explicit
      *
      * \return RWSResult containing the result.
      *
      * \throw std::out_of_range if argument is out of range.
      * \throw \a RWSError if something goes wrong.
      */
-    void setSpeedRatio(RWSClient& client, unsigned int ratio);
+    void setSpeedRatio(RWSClient& client, unsigned int ratio, Mastership const& mastership = Mastership::Explicit);
 }

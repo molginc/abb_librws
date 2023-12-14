@@ -61,16 +61,18 @@ namespace abb :: rws :: v2_0 :: rw :: panel
     }
 
 
-    void setSpeedRatio(RWSClient& client, unsigned int ratio)
+    void setSpeedRatio(RWSClient& client, unsigned int ratio, Mastership const& mastership)
     {
         if (ratio > 100)
             BOOST_THROW_EXCEPTION(std::out_of_range {"Speed ratio argument out of range (should be 0 <= ratio <= 100)"});
 
-        std::string uri = "/rw/panel/speedratio?action=setspeedratio";
+        std::stringstream uri;
+        uri << Resources::RW_PANEL << "/speedratio?action=setspeedratio&mastership=" << mastership;
         std::stringstream content;
         content << "speed-ratio=" << ratio;
+        std::string content_type = "application/x-www-form-urlencoded;v=2.0";
 
-        client.httpPost(uri, content.str());
+        client.httpPost(uri.str(), content.str(), content_type);
     }
 
     std::string ControllerStateSubscribableResource::getURI() const
@@ -84,8 +86,13 @@ namespace abb :: rws :: v2_0 :: rw :: panel
       return "/rw/panel/opmode";
     }
 
+    std::string SpeedRatioSubscribableResource::getURI() const
+    {
+        return "/rw/panel/speedratio";
+    }
 
-    void ControllerStateSubscribableResource::processEvent(Poco::XML::Element const& li_element, SubscriptionCallback& callback) const
+
+    void ControllerStateSubscribableResource::processEvent(Poco::XML::Element const& li_element, std::function<void(SubscriptionEvent const&)> const& callback) const
     {
         if (li_element.getAttribute("class") == "pnl-ctrlstate-ev")
         {
@@ -93,12 +100,12 @@ namespace abb :: rws :: v2_0 :: rw :: panel
             event.state = rw::makeControllerState(xmlFindTextContent(&li_element, XMLAttribute {"class", "ctrlstate"}));
             event.resource = std::make_shared<ControllerStateSubscribableResource>();
 
-            callback.processEvent(event);
+            callback(event);
         }
     }
 
 
-    void OperationModeSubscribableResource::processEvent(Poco::XML::Element const& li_element, SubscriptionCallback& callback) const
+    void OperationModeSubscribableResource::processEvent(Poco::XML::Element const& li_element, std::function<void(SubscriptionEvent const&)> const& callback) const
     {
         if (li_element.getAttribute("class") == "pnl-opmode-ev")
         {
@@ -106,7 +113,20 @@ namespace abb :: rws :: v2_0 :: rw :: panel
             event.mode = rw::makeOperationMode(xmlFindTextContent(&li_element, XMLAttribute {"class", "opmode"}));
             event.resource = std::make_shared<OperationModeSubscribableResource>();
 
-            callback.processEvent(event);
+            callback(event);
+        }
+    }
+
+
+    void SpeedRatioSubscribableResource::processEvent(Poco::XML::Element const& li_element, std::function<void(SubscriptionEvent const&)> const& callback) const
+    {
+        if (li_element.getAttribute("class") == "pnl-speedratio-ev")
+        {
+            SpeedRatioChangedEvent event;
+            event.value = std::stoi(xmlFindTextContent(&li_element, XMLAttribute {"class", "speedratio"}));
+            event.resource = std::make_shared<SpeedRatioSubscribableResource>();
+
+            callback(event);
         }
     }
 }
