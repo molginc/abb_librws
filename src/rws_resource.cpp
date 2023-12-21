@@ -36,6 +36,8 @@
 #include <abb_librws/rws_resource.h>
 
 #include <iostream>
+#include <boost/bimap.hpp>
+#include <boost/assign.hpp>
 
 
 namespace abb :: rws
@@ -49,6 +51,43 @@ std::ostream& operator<<(std::ostream& os, RAPIDResource const& resource)
         << ", .module=" << resource.module
         << ", .name=" << resource.name
         << ")";
+}
+
+std::ostream& operator<<(std::ostream& os, CFGDomain const& domain)
+{
+    return os << to_string(domain);
+}
+
+boost::bimap<CFGDomain, std::string> makeCFGDomainMap()
+{
+    boost::bimap<CFGDomain, std::string> map;
+    map.insert(boost::bimap<CFGDomain, std::string>::relation(CFGDomain::D_EIO, "EIO"));
+    map.insert(boost::bimap<CFGDomain, std::string>::relation(CFGDomain::D_MMC, "MMC"));
+    map.insert(boost::bimap<CFGDomain, std::string>::relation(CFGDomain::D_MOC, "MOC"));
+    map.insert(boost::bimap<CFGDomain, std::string>::relation(CFGDomain::D_PROC, "PROC"));
+    map.insert(boost::bimap<CFGDomain, std::string>::relation(CFGDomain::D_SIO, "SIO"));
+    map.insert(boost::bimap<CFGDomain, std::string>::relation(CFGDomain::D_SYS, "SYS"));
+    return map;
+}
+
+static boost::bimap<CFGDomain, std::string> const CFGDomainMap = makeCFGDomainMap();
+
+CFGDomain to_CFGDomain(std::string const& domain)
+{
+    try{
+        return CFGDomainMap.right.at(domain);
+    } catch (std::out_of_range const& e) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unknown CFGDomain: " + domain));
+    }
+}
+
+std::string to_string(CFGDomain domain)
+{
+    try {
+        return CFGDomainMap.left.at(domain);
+    } catch (std::out_of_range const& e) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unknown CFGDomain: " + std::to_string(static_cast<int>(domain))));
+    }
 }
 
 } // end namespace abb::rws
