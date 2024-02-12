@@ -86,7 +86,7 @@ RWSClient::~RWSClient()
   catch (std::exception const& e)
   {
     // Catch all exceptions in dtor.
-    std::cerr << "Exception in RWSClient::~RWSClient(): " << e.what() << std::endl;
+    std::cerr << "Exception in RWSClient::~RWSClient(): " << boost::diagnostic_information(e) << std::endl;
   }
 }
 

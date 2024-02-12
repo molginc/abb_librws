@@ -69,9 +69,9 @@ RAPIDExecutionInfo getRAPIDExecution(RWSClient& client)
 void startRAPIDExecution(RWSClient& client, Mastership const& mastership)
 {
   std::stringstream uri;
-  uri << "/rw/rapid/execution/start?mastership=" << mastership;
+  uri << "/rw/rapid/execution/start";
   std::string const content =
-      "regain=continue&execmode=continue&cycle=forever&condition=none&stopatbp=disabled&alltaskbytsp=false";
+      "regain=regain&execmode=continue&cycle=forever&condition=none&stopatbp=disabled&alltaskbytsp=true";
   std::string const content_type = "application/x-www-form-urlencoded;v=2.0";
 
   client.httpPost(uri.str(), content, content_type);

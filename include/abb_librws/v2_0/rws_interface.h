@@ -477,6 +477,16 @@ public:
    */
   void deleteFile(const FileResource& resource);
 
+     /**
+   * \brief A method for setting the HTTP communication timeout.
+   *
+   * \param timeout for the HTTP communication timeout [microseconds].
+   */
+  void setHTTPTimeout(const Poco::Int64 timeout)
+  {
+    rws_client_.setHTTPTimeout(timeout);
+  }
+
   /**
    * \brief Creates a subscription group.
    *
@@ -513,6 +523,16 @@ public:
   void registerRemoteUser(const std::string& username = DEFAULT_USERNAME,
                           const std::string& application = SystemConstants::General::EXTERNAL_APPLICATION,
                           const std::string& location = SystemConstants::General::EXTERNAL_LOCATION);
+
+  /**
+   * \brief Request mastership of all domains.
+   */
+  void requestMastership();
+
+  /**
+   * \brief Release mastership of all domains.
+   */
+  void releaseMastership();
 
   /**
    * \brief Request RWS mastership

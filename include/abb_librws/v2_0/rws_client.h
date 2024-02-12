@@ -226,6 +226,22 @@ public:
    */
   void deleteFile(const FileResource& resource);
 
+
+    
+  /**
+   * \brief A method for setting the HTTP communication timeout.
+   *
+   * \note This method resets the internal HTTP client session, causing the
+   *       RWS server (robot controller) to send a new cookie. The RWS
+   *       session id is not changed.
+   *
+   * \param timeout for the HTTP communication timeout [microseconds].
+   */
+  void setHTTPTimeout(const Poco::Int64 timeout)
+  {
+    http_client_.setTimeout(timeout);
+  }
+
   /**
    * \brief A method for registering a user as local.
    *
