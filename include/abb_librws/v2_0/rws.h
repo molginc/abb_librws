@@ -122,6 +122,41 @@ namespace abb :: rws :: v2_0
      * \brief Class & option.
      */
     static const XMLAttribute CLASS_OPTION;
+
+    /**
+     * \brief Class & pcp-info.
+     */
+    static const XMLAttribute CLASS_PCP_INFO;
+
+    /**
+     * \brief Class & beginposition.
+     */
+    static const XMLAttribute CLASS_BEGIN_POSITION;
+
+    /**
+     * \brief Class & begposition.
+     */
+    static const XMLAttribute CLASS_MISS_SPELLED_BEGIN_POSITION;
+
+    /**
+     * \brief Class & endposition.
+     */
+    static const XMLAttribute CLASS_END_POSITION;
+
+    /**
+     * \brief Class & modulename.
+     */
+    static const XMLAttribute CLASS_MODULE_NAME;
+
+    /**
+     * \brief Class & modulemame - misspelled.
+     */
+    static const XMLAttribute CLASS_MISS_SPELLED_MODULE_NAME;
+
+    /**
+     * \brief Class & routinename.
+     */
+    static const XMLAttribute CLASS_ROUTINE_NAME;
   };
 
   /**
@@ -308,6 +343,41 @@ namespace abb :: rws :: v2_0
      * \brief Option.
      */
     static const std::string OPTION;
+
+    /**
+     * \brief Pcp info.
+     */
+    static const std::string PCP_INFO;
+
+    /**
+     * \brief Begin position.
+     */
+    static const std::string BEGIN_POSITION;
+
+    /**
+     * \brief Begin position but misspelled one.
+     */
+    static const std::string MISS_SPELLED_BEGIN_POSITION;
+
+    /**
+     * \brief End position.
+     */
+    static const std::string END_POSITION;
+
+    /**
+     * \brief Module name.
+     */
+    static const std::string MODULE_NAME;
+
+    /**
+     * \brief Module name but misspelled one.
+     */
+    static const std::string MISS_SPELLED_MODULE_NAME;
+
+    /**
+     * \brief Module name.
+     */
+    static const std::string ROUTINE_NAME;
   };
 
   /**
