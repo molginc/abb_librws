@@ -55,6 +55,7 @@ const std::string IOSignals::EGM_START_POSE = "EGM_START_POSE";
 const std::string IOSignals::EGM_START_STREAM = "EGM_START_STREAM";
 const std::string IOSignals::EGM_STOP = "EGM_STOP";
 const std::string IOSignals::EGM_STOP_STREAM = "EGM_STOP_STREAM";
+const std::string IOSignals::EGM_RUN_CALIBRATION = "EGM_RUN_CALIBRATION";
 const std::string IOSignals::OUTPUT_STATIONARY = "OUTPUT_STATIONARY";
 const std::string IOSignals::RUN_RAPID_ROUTINE = "RUN_RAPID_ROUTINE";
 const std::string IOSignals::RUN_SG_ROUTINE = "RUN_SG_ROUTINE";
@@ -73,6 +74,7 @@ const std::string Procedures::RUN_MODULE_LOAD = "runModuleLoad";
 const std::string Procedures::RUN_MODULE_UNLOAD = "runModuleUnload";
 const std::string Procedures::RUN_MOVE_ABS_J = "runMoveAbsJ";
 const std::string Procedures::RUN_MOVE_J = "runMoveJ";
+const std::string Procedures::ACTION_CALIBRATION = "actionCalibration";
 const std::string Procedures::RUN_MOVE_TO_CALIBRATION_POSITION = "runMoveToCalibrationPosition";
 
 const RAPIDSymbolResource Symbols::EGM_CURRENT_ACTION(Modules::T_ROB_EGM, "current_action");
@@ -83,6 +85,7 @@ const RAPIDSymbolResource Symbols::RAPID_CALL_BY_VAR_NUM_INPUT(Modules::T_ROB_RA
 const RAPIDSymbolResource Symbols::RAPID_MODULE_FILE_PATH_INPUT(Modules::T_ROB_RAPID, "module_file_path_input");
 const RAPIDSymbolResource Symbols::RAPID_MOVE_JOINT_TARGET_INPUT(Modules::T_ROB_RAPID, "move_jointtarget_input");
 const RAPIDSymbolResource Symbols::RAPID_MOVE_ROB_TARGET_INPUT(Modules::T_ROB_RAPID, "move_robtarget_input");
+const RAPIDSymbolResource Symbols::CALCULATE_ROB_TARGET_INPUT(Modules::T_ROB_RAPID, "calculate_robtarget_input");
 const RAPIDSymbolResource Symbols::RAPID_MOVE_SPEED_INPUT(Modules::T_ROB_RAPID, "move_speed_input");
 const RAPIDSymbolResource Symbols::RAPID_ROUTINE_NAME_INPUT(Modules::T_ROB_RAPID, "routine_name_input");
 const RAPIDSymbolResource Symbols::SG_COMMAND_INPUT(Modules::T_ROB_SG, "command_input");
@@ -163,6 +166,11 @@ void RWSStateMachineInterface::Services::EGM::signalEGMStop() const
 void RWSStateMachineInterface::Services::EGM::signalEGMStopStream() const
 {
   p_rws_interface_->toggleIOSignal(IOSignals::EGM_STOP_STREAM);
+}
+
+void RWSStateMachineInterface::Services::EGM::signalEGMRunCalibration() const
+{
+  p_rws_interface_->toggleIOSignal(IOSignals::EGM_RUN_CALIBRATION);
 }
 
 /***********************************************************************************************************************

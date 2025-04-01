@@ -186,6 +186,11 @@ public:
        * Important: Not equivalent to an emergency stop.
        */
       static const std::string WD_STOP_REQUEST;
+
+      /**
+       * \brief IO signal for requesting calibration of joint targets into abs accuracy coordinates
+       */
+      static const std::string EGM_RUN_CALIBRATION;
     };
 
     /**
@@ -267,6 +272,11 @@ public:
          * \brief Predefined RAPID procedure "runMoveToCalibrationPosition".
          */
         static const std::string RUN_MOVE_TO_CALIBRATION_POSITION;
+
+        /**
+         * \brief Predefined RAPID procedure "actionCalibration".
+         */
+        static const std::string ACTION_CALIBRATION;
       };
 
       /**
@@ -369,6 +379,13 @@ public:
          * \brief RAPID symbol indicating if a watchdog should check an external status signal or not.
          */
         static const RAPIDSymbolResource WATCHDOG_CHECK_EXTERNAL_STATUS;
+
+        /**
+         * \brief RAPID symbol containing settings to different EGM RAPID instructions.
+         *
+         * Note: Requires that the EGM option exists in the controller system.
+         */
+        static const RAPIDSymbolResource CALCULATE_ROB_TARGET_INPUT;
       };
     };
   };
@@ -875,6 +892,14 @@ private:
        * \brief Signal the StateMachine AddIn to stop any current position streaming.
        */
       void signalEGMStopStream() const;
+
+      /**
+       * \brief Signal the StateMachine AddIn to run EGM calibration.
+       *
+       * \param task specifying the RAPID task.
+       * \param joint_target specifying jointtarget goal. Will be a list of joint targets eventually..
+       */
+      void signalEGMRunCalibration() const;
 
     private:
       /**
