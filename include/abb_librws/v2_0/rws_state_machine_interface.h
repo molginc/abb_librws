@@ -876,6 +876,14 @@ private:
        */
       void signalEGMStopStream() const;
 
+      /**
+        * \brief New method to update the EGM tool.
+        *
+        * \param task Name of the RAPID task (e.g. "T_ROB1").
+        * \param new_tool The new tooldata to be written to the EGM settings.
+        */
+      void changeTool(const std::string& task, const ToolData& new_tool) const;
+
     private:
       /**
        * \brief The RWS interface instance.

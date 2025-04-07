@@ -165,6 +165,19 @@ void RWSStateMachineInterface::Services::EGM::signalEGMStopStream() const
   p_rws_interface_->toggleIOSignal(IOSignals::EGM_STOP_STREAM);
 }
 
+void RWSStateMachineInterface::Services::EGM::changeTool(const std::string& task, const ToolData& new_tool) const
+{
+  // 1) Retrieve the current EGM settings from the controller
+  EGMSettings current_settings;
+  p_rws_interface_->getRAPIDSymbolData({task, Symbols::EGM_SETTINGS}, current_settings);
+
+  // 2) Overwrite the 'activate.tool' field with our new tool
+  current_settings.activate.tool = new_tool;
+
+  // 3) Write the updated EGM settings back to the controller
+  p_rws_interface_->setRAPIDSymbolData({task, Symbols::EGM_SETTINGS}, current_settings);
+}
+
 /***********************************************************************************************************************
  * Class definitions: RWSStateMachineInterface::Services::Main
  */
@@ -285,6 +298,7 @@ void RWSStateMachineInterface::Services::RAPID::signalRunRAPIDRoutine() const
 {
   p_rws_interface_->toggleIOSignal(IOSignals::RUN_RAPID_ROUTINE);
 }
+
 
 /***********************************************************************************************************************
  * Class definitions: RWSStateMachineInterface::Services::SG
