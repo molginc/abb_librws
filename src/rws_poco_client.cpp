@@ -58,7 +58,7 @@ namespace rws
 POCOClient::POCOClient(Poco::Net::HTTPClientSession& session, const std::string& username, const std::string& password)
   : http_client_session_{ session }, http_credentials_{ username, password }
 {
-  http_client_session_.setKeepAlive(false);
+  http_client_session_.setKeepAlive(true);
 }
 
 POCOClient::~POCOClient()
@@ -160,7 +160,7 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
   std::string response_content;
 
   HTTPRequest request(method, uri, HTTPRequest::HTTP_1_1);
-  request.setCredentials("Basic", "RGVmYXVsdCBVc2VyOnJvYm90aWNz");
+  // request.setCredentials("Basic", "RGVmYXVsdCBVc2VyOnJvYm90aWNz");
   request.add("accept", "application/xhtml+xml;v=2.0");
   // request.add("Connection", "close");     //[FA]  request to close the connection after the response is received
   request.setCookies(cookies_);
@@ -196,12 +196,12 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
     }
 
     // Check if there was a server error, if so, make another attempt with a clean sheet.
-    if (response.getStatus() >= HTTPResponse::HTTP_INTERNAL_SERVER_ERROR)
-    {
-      http_client_session_.reset();
-      request.erase(HTTPRequest::COOKIE);
-      sendAndReceive(request, response, content, response_content);
-    }
+    // if (response.getStatus() >= HTTPResponse::HTTP_INTERNAL_SERVER_ERROR)
+    // {
+    //   http_client_session_.reset();
+    //   request.erase(HTTPRequest::COOKIE);
+    //   sendAndReceive(request, response, content, response_content);
+    // }
 
     // Check if the request was unauthorized, if so add credentials.
     if (response.getStatus() == HTTPResponse::HTTP_UNAUTHORIZED)
@@ -213,6 +213,32 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
   }
   catch (CommunicationError const&)
   {
+    // Log the communication error
+    std::cerr << "[ERROR] Communication error occurred during HTTP request:" << std::endl;
+    std::cerr << "  Method: " << request.getMethod() << std::endl;
+    std::cerr << "  URI: " << request.getURI() << std::endl;
+    std::cerr << "  Content: " << content << std::endl;
+
+    // Log the headers from the last request
+    std::cerr << "  Headers:" << std::endl;
+    for (const auto& header : request)
+    {
+      std::cerr << "    " << header.first << ": " << header.second << std::endl;
+    }
+
+    // Attempt to log the traceback
+    try
+    {
+      throw; // Re-throw the current exception to capture traceback
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr << "[TRACEBACK] Exception: " << e.what() << std::endl;
+    }
+    catch (...)
+    {
+      std::cerr << "[TRACEBACK] Unknown exception occurred." << std::endl;
+    }
     cookies_.clear();
     http_client_session_.reset();
 
@@ -263,8 +289,13 @@ void POCOClient::sendAndReceive(HTTPRequest& request, HTTPResponse& response, co
   // Add request info to the log entry.
   log_entry.addHTTPRequestInfo(request, request_content);
 
-  // Contact the server.
+  // Add cookies to the request.
+  if (cookies_.size() > 0)
+  {
+    request.setCookies(cookies_);
+  }
 
+  // Contact the server.
   try
   {
     std::ostream& request_content_stream = http_client_session_.sendRequest(request);
@@ -296,7 +327,7 @@ void POCOClient::sendAndReceive(HTTPRequest& request, HTTPResponse& response, co
   // Add response info to the log entry.
   log_entry.addHTTPResponseInfo(response, response_content);
 
-  // Add entry to the log
+  // Add entry to the log.
   if (log_.size() >= LOG_SIZE)
   {
     log_.pop_back();
@@ -308,20 +339,23 @@ void POCOClient::sendAndReceive(HTTPRequest& request, HTTPResponse& response, co
 void POCOClient::authenticate(HTTPRequest& request, HTTPResponse& response, const std::string& request_content,
                               std::string& response_content)
 {
-  // Remove any old cookies.
-  cookies_.clear();
-
   // Authenticate with the provided credentials.
   http_credentials_.authenticate(request, response);
 
   // Contact the server, and extract and store the received cookies.
   sendAndReceive(request, response, request_content, response_content);
-  std::vector<HTTPCookie> temp_cookies;
-  response.getCookies(temp_cookies);
 
-  for (size_t i = 0; i < temp_cookies.size(); ++i)
+  // Update cookies with the ones received in the response.
+  // std::vector<HTTPCookie> temp_cookies;
+  // response.getCookies(temp_cookies);
+  for (const auto& header : response)
   {
-    extractAndStoreCookie(temp_cookies[i].toString());
+    if (header.first == HTTPResponse::SET_COOKIE)
+    {
+      // std::cout << "[DEBUG] Received cookie: " << header.second << std::endl;
+      HTTPCookie cookie(header.second);
+      extractAndStoreCookie(header.second);
+    }
   }
 }
 
@@ -337,7 +371,8 @@ void POCOClient::extractAndStoreCookie(const std::string& cookie_string)
     std::string result = cookie_string.substr(0, position_1++);
     std::string result2 = cookie_string.substr(position_1, position_2 - position_1);
 
-    cookies_.add(result, result2);
+    cookies_.set(result, result2);
+    std::cout << "[DEBUG] Extracted cookie: [" << result << "] = [" << result2 << "]" << " from " << cookie_string << std::endl;
   }
 }
 
