@@ -93,4 +93,9 @@ using HttpResponseErrorInfo = boost::error_info<struct HttpResponseErrorInfoTag,
  * \brief Error info containing an URI.
  */
 using UriErrorInfo = boost::error_info<struct UriErrorInfoTag, std::string>;
+
+/**
+ * \brief Error info containing an HTTP header.
+ */
+using HttpHeaderErrorInfo = boost::error_info<struct HttpHeaderErrorInfoTag, std::string>;
 }  // namespace abb::rws

@@ -35,6 +35,7 @@
  */
 
 #include <sstream>
+#include <iostream>
 
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/NetException.h>
@@ -57,7 +58,7 @@ namespace rws
 POCOClient::POCOClient(Poco::Net::HTTPClientSession& session, const std::string& username, const std::string& password)
   : http_client_session_{ session }, http_credentials_{ username, password }
 {
-  http_client_session_.setKeepAlive(true);
+  http_client_session_.setKeepAlive(false);
 }
 
 POCOClient::~POCOClient()
@@ -67,6 +68,69 @@ POCOClient::~POCOClient()
 /************************************************************
  * Primary methods
  */
+
+ POCOResult POCOClient::httpAuthenticate(const std::string& uri)
+{
+    try
+    {
+      // The response and the request.
+      HTTPResponse response;
+      std::string response_content;
+      std::string content;
+
+      HTTPRequest request(HTTPRequest::HTTP_GET, uri, HTTPRequest::HTTP_1_1);
+      request.setCredentials("Basic", "RGVmYXVsdCBVc2VyOnJvYm90aWNz");
+      request.add("accept", "application/xhtml+xml;v=2.0");
+
+      // http_credentials_.updateAuthInfo(request);
+
+      // Logging authentication attempt
+      std::cout << "[DEBUG] Authentication attempt with credentials: " << http_credentials_.getUsername() << std::endl;
+
+      // Logging the updated request details after authentication
+      std::cout << "[DEBUG] HTTP Authentication Request :" << std::endl;
+      std::cout << "  Method: " << request.getMethod() << std::endl;
+      std::cout << "  URI: " << request.getURI() << std::endl;
+      std::cout << "  Headers:" << std::endl;
+      for (const auto& header : request)
+      {
+        std::cout << "    " << header.first << ": " << header.second << std::endl;
+      }
+
+      authenticate(request, response, content, response_content);
+
+      // Logging the response details after authentication
+      std::cout << "[DEBUG] HTTP Response after authentication:" << std::endl;
+      std::cout << "  Status: " << response.getStatus() << std::endl;
+      std::cout << "  Reason: " << response.getReason() << std::endl;
+      std::cout << "  Headers:" << std::endl;
+      for (HTTPResponse::ConstIterator it = response.begin(); it != response.end(); ++it)
+      {
+        std::cout << "    " << it->first << ": " << it->second << std::endl;
+      }
+      // std::cout << "  Body: " << response_content << std::endl;
+
+      return POCOResult{ response.getStatus(), response.getReason(), response, response_content };
+    }
+    catch (const Poco::Exception& e)
+    {
+      std::cerr << "[ERROR] Exception during HTTP authentication: " << e.displayText() << std::endl;
+      throw;
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr << "[ERROR] Standard exception during HTTP authentication: " << e.what() << std::endl;
+      throw;
+    }
+    catch (...)
+    {
+      std::cerr << "[ERROR] Unknown exception during HTTP authentication" << std::endl;
+      throw;
+    }
+
+
+}
+
 
 POCOResult POCOClient::httpGet(const std::string& uri)
 {
@@ -89,13 +153,14 @@ POCOResult POCOClient::httpDelete(const std::string& uri)
 }
 
 POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::string& uri, const std::string& content,
-                                       const std::string& content_type)
+                     const std::string& content_type)
 {
   // The response and the request.
   HTTPResponse response;
   std::string response_content;
 
   HTTPRequest request(method, uri, HTTPRequest::HTTP_1_1);
+  request.setCredentials("Basic", "RGVmYXVsdCBVc2VyOnJvYm90aWNz");
   request.add("accept", "application/xhtml+xml;v=2.0");
   // request.add("Connection", "close");     //[FA]  request to close the connection after the response is received
   request.setCookies(cookies_);
@@ -112,7 +177,7 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
 
   // Attempt the communication.
   try
-  {
+  { 
     sendAndReceive(request, response, content, response_content);
 
     // Check if the server has sent an update for the cookies.

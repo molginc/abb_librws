@@ -73,8 +73,19 @@ RWSClient::RWSClient(ConnectionOptions const& connection_options)
   session_.setTimeout(connectionOptions_.connection_timeout.count(), connectionOptions_.send_timeout.count(),
                       connectionOptions_.receive_timeout.count());
 
-  // Make a request to the server to check connection and initiate authentification.
-  getRobotWareSystem();
+  // // Make a request to the server to check connection and initiate authentification.
+  // try
+  // {
+  //   auto result = getRobotWareSystem();
+  //   std::cout << "RobotWare System: " << result << std::endl;
+  // }
+  // catch (const std::exception& e)
+  // {
+  //   std::cerr << "Error while fetching RobotWare System: " << e.what() << std::endl;
+  // }
+  // getRobotWareSystem();
+  // authenticateController();
+
 }
 
 RWSClient::~RWSClient()
@@ -177,6 +188,15 @@ RWSClient::RWSResult RWSClient::getMechanicalUnitRobTarget(const std::string& me
   }
 
   return parseContent(httpGet(uri));
+}
+
+RWSClient::RWSResult RWSClient::authenticateController()
+{
+  std::string uri = Resources::RW_SYSTEM;
+
+  POCOResult const result = http_client_.httpAuthenticate(uri);
+
+  return parseContent(result);
 }
 
 RWSClient::RWSResult RWSClient::getRobotWareSystem()
@@ -284,10 +304,24 @@ POCOResult RWSClient::httpGet(const std::string& uri)
   POCOResult const result = http_client_.httpGet(uri);
 
   if (result.httpStatus() != HTTPResponse::HTTP_NO_CONTENT && result.httpStatus() != HTTPResponse::HTTP_OK)
+  {
+    std::ostringstream header_info_stream;
+
+    for (const auto& header : result.headerInfo())
+    {
+      header_info_stream << header.first << ": " << header.second << "\n";
+    }
+
     BOOST_THROW_EXCEPTION(
-        ProtocolError{ "HTTP response status not accepted" }
-        << HttpMethodErrorInfo{ "GET" } << UriErrorInfo{ uri } << HttpStatusErrorInfo{ result.httpStatus() }
-        << HttpResponseContentErrorInfo{ result.content() } << HttpReasonErrorInfo{ result.reason() });
+      ProtocolError{ "HTTP response status not accepted" }
+      << HttpMethodErrorInfo{ "GET" } 
+      << UriErrorInfo{ uri } 
+      << HttpStatusErrorInfo{ result.httpStatus() }
+      << HttpResponseContentErrorInfo{ result.content() } 
+      << HttpReasonErrorInfo{ result.reason() } 
+      << HttpHeaderErrorInfo{ header_info_stream.str() }
+    );
+  }
 
   return result;
 }
