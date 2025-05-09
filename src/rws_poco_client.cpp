@@ -113,9 +113,7 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
   std::string response_content;
 
   HTTPRequest request(method, uri, HTTPRequest::HTTP_1_1);
-  // request.setCredentials("Basic", "RGVmYXVsdCBVc2VyOnJvYm90aWNz");
   request.add("accept", "application/xhtml+xml;v=2.0");
-  // request.add("Connection", "close");     //[FA]  request to close the connection after the response is received
   request.setCookies(cookies_);
   request.setContentLength(content.length());
 
@@ -149,12 +147,12 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
     }
 
     // Check if there was a server error, if so, make another attempt with a clean sheet.
-    // if (response.getStatus() >= HTTPResponse::HTTP_INTERNAL_SERVER_ERROR)
-    // {
-    //   http_client_session_.reset();
-    //   request.erase(HTTPRequest::COOKIE);
-    //   sendAndReceive(request, response, content, response_content);
-    // }
+    if (response.getStatus() >= HTTPResponse::HTTP_INTERNAL_SERVER_ERROR)
+    {
+      http_client_session_.reset();
+      request.erase(HTTPRequest::COOKIE);
+      sendAndReceive(request, response, content, response_content);
+    }
 
     // Check if the request was unauthorized, if so add credentials.
     if (response.getStatus() == HTTPResponse::HTTP_UNAUTHORIZED)
@@ -166,32 +164,7 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
   }
   catch (CommunicationError const&)
   {
-    // Log the communication error
-    std::cerr << "[ERROR] Communication error occurred during HTTP request:" << std::endl;
-    std::cerr << "  Method: " << request.getMethod() << std::endl;
-    std::cerr << "  URI: " << request.getURI() << std::endl;
-    std::cerr << "  Content: " << content << std::endl;
-
-    // Log the headers from the last request
-    std::cerr << "  Headers:" << std::endl;
-    for (const auto& header : request)
-    {
-      std::cerr << "    " << header.first << ": " << header.second << std::endl;
-    }
-
-    // Attempt to log the traceback
-    try
-    {
-      throw; // Re-throw the current exception to capture traceback
-    }
-    catch (const std::exception& e)
-    {
-      std::cerr << "[TRACEBACK] Exception: " << e.what() << std::endl;
-    }
-    catch (...)
-    {
-      std::cerr << "[TRACEBACK] Unknown exception occurred." << std::endl;
-    }
+    // If an error occurred, clear the cookies and reset the session.
     cookies_.clear();
     http_client_session_.reset();
 
