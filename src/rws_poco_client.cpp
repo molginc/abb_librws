@@ -71,8 +71,6 @@ POCOClient::~POCOClient()
 
  POCOResult POCOClient::httpAuthenticate(const std::string& uri)
 {
-    try
-    {
       // The response and the request.
       HTTPResponse response;
       std::string response_content;
@@ -82,53 +80,8 @@ POCOClient::~POCOClient()
       request.setCredentials("Basic", "RGVmYXVsdCBVc2VyOnJvYm90aWNz");
       request.add("accept", "application/xhtml+xml;v=2.0");
 
-      // http_credentials_.updateAuthInfo(request);
-
-      // Logging authentication attempt
-      std::cout << "[DEBUG] Authentication attempt with credentials: " << http_credentials_.getUsername() << std::endl;
-
-      // Logging the updated request details after authentication
-      std::cout << "[DEBUG] HTTP Authentication Request :" << std::endl;
-      std::cout << "  Method: " << request.getMethod() << std::endl;
-      std::cout << "  URI: " << request.getURI() << std::endl;
-      std::cout << "  Headers:" << std::endl;
-      for (const auto& header : request)
-      {
-        std::cout << "    " << header.first << ": " << header.second << std::endl;
-      }
-
       authenticate(request, response, content, response_content);
-
-      // Logging the response details after authentication
-      std::cout << "[DEBUG] HTTP Response after authentication:" << std::endl;
-      std::cout << "  Status: " << response.getStatus() << std::endl;
-      std::cout << "  Reason: " << response.getReason() << std::endl;
-      std::cout << "  Headers:" << std::endl;
-      for (HTTPResponse::ConstIterator it = response.begin(); it != response.end(); ++it)
-      {
-        std::cout << "    " << it->first << ": " << it->second << std::endl;
-      }
-      // std::cout << "  Body: " << response_content << std::endl;
-
       return POCOResult{ response.getStatus(), response.getReason(), response, response_content };
-    }
-    catch (const Poco::Exception& e)
-    {
-      std::cerr << "[ERROR] Exception during HTTP authentication: " << e.displayText() << std::endl;
-      throw;
-    }
-    catch (const std::exception& e)
-    {
-      std::cerr << "[ERROR] Standard exception during HTTP authentication: " << e.what() << std::endl;
-      throw;
-    }
-    catch (...)
-    {
-      std::cerr << "[ERROR] Unknown exception during HTTP authentication" << std::endl;
-      throw;
-    }
-
-
 }
 
 
@@ -372,7 +325,6 @@ void POCOClient::extractAndStoreCookie(const std::string& cookie_string)
     std::string result2 = cookie_string.substr(position_1, position_2 - position_1);
 
     cookies_.set(result, result2);
-    std::cout << "[DEBUG] Extracted cookie: [" << result << "] = [" << result2 << "]" << " from " << cookie_string << std::endl;
   }
 }
 
