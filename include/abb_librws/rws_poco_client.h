@@ -72,6 +72,8 @@ public:
    */
   ~POCOClient();
 
+   POCOResult httpAuthenticate(const std::string& uri);
+
   /**
    * \brief A method for sending a HTTP GET request.
    *

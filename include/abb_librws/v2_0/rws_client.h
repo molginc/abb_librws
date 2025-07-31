@@ -279,6 +279,9 @@ public:
   std::string getResourceURI(OperationModeResource const&) const override;
   void processEvent(Poco::AutoPtr<Poco::XML::Document> content, SubscriptionCallback& callback) const override;
 
+
+RWSClient::RWSResult authenticateController();
+
   /**
    * \brief A method for sending a HTTP GET request and checking response status.
    *

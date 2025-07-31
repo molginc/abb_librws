@@ -130,7 +130,7 @@ std::string getRAPIDSymbolData(RWSClient& client, RAPIDResource const& resource)
  * \throw \a RWSError if something goes wrong.
  */
 void setRAPIDSymbolData(RWSClient& client, const RAPIDResource& resource, const RAPIDSymbolDataAbstract& data,
-                        bool initval = false, bool log = false, Mastership const& mastership = Mastership::Explicit);
+                        bool initval = false, bool log = true, Mastership const& mastership = Mastership::Implicit);
 
 /**
  * \brief A function for setting the data of a RAPID symbol.
@@ -145,7 +145,7 @@ void setRAPIDSymbolData(RWSClient& client, const RAPIDResource& resource, const 
  * \throw \a RWSError if something goes wrong.
  */
 void setRAPIDSymbolData(RWSClient& client, const RAPIDResource& resource, const std::string& data, bool initval = false,
-                        bool log = false, Mastership const& mastership = Mastership::Explicit);
+                        bool log = true, Mastership const& mastership = Mastership::Implicit);
 
 /**
  * \brief A function for loading a module to the robot controller.
