@@ -88,19 +88,19 @@ void POCOClient::applyCookieToJar(Poco::Net::NameValueCollection& jar,
 
   if (isCookieDeletion(cookie))
   {
-    // Removing-by-name is safe whether or not the entry exists.
+    // erase() removes ALL entries with this name, so any prior
+    // duplicates are cleared atomically.
     jar.erase(name);
     return;
   }
 
-  if (jar.find(name) != jar.end())
-  {
-    jar.set(name, cookie.getValue());
-  }
-  else
-  {
-    jar.add(name, cookie.getValue());
-  }
+  // set() is insert-or-update on the FIRST occurrence. We never call
+  // add() for cookies because NameValueCollection allows duplicate
+  // keys and add() would create a stale shadow entry — set() then
+  // only updates the first one and the shadow gets resent on the
+  // next request. See Poco::Net::NameValueCollection docs and the
+  // RMF-315 review thread for context.
+  jar.set(name, cookie.getValue());
 }
 
 /***********************************************************************************************************************

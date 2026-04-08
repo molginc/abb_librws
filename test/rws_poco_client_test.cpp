@@ -196,4 +196,28 @@ TEST(POCOClientCookieTest, applyCookieToJar_OmnicoreSessionInvalidationScenario)
   EXPECT_EQ(jar.size(), 0u) << "RMF-315: poisoned jar would survive into the next request";
 }
 
+TEST(POCOClientCookieTest, applyCookieToJar_neverCreatesDuplicateKeys)
+{
+  // Poco::Net::NameValueCollection is multimap-style ("There can be
+  // more than one name-value pair with the same name" — see
+  // NameValueCollection.h). If applyCookieToJar ever used add()
+  // instead of set() for an existing key, two entries would coexist
+  // and the stale one would survive future updates. Pin set()
+  // semantics so a future "optimization" can't reintroduce the bug.
+  Poco::Net::NameValueCollection jar;
+
+  Poco::Net::HTTPCookie first("ABBCX", "value_one");
+  POCOClient::applyCookieToJar(jar, first);
+  ASSERT_EQ(jar.size(), 1u);
+
+  // Apply a second non-deletion cookie with the SAME name. Naive add()
+  // would grow the jar to 2 entries; correct set() leaves it at 1.
+  Poco::Net::HTTPCookie second("ABBCX", "value_two");
+  POCOClient::applyCookieToJar(jar, second);
+
+  EXPECT_EQ(jar.size(), 1u)
+      << "applyCookieToJar must not create duplicate keys for the same cookie name";
+  EXPECT_EQ(jar.get("ABBCX"), "value_two");
+}
+
 }  // namespace abb ::rws
