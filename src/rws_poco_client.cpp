@@ -212,16 +212,25 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
       }
     }
 
-    // RMF-315: if the controller invalidated our session, drop the
-    // (now-deleted) cookies and reset the underlying TCP session
-    // BEFORE re-authenticating. Otherwise the auth retry resends
-    // the very cookies the server just told us to delete and we
-    // stay wedged at 401 for the lifetime of the process. Mirrors
-    // the existing 5xx recovery branch above.
+    // RMF-315: on a session-invalidation 401, let the existing cookie
+    // jar do its work. The cookie merge above (applyCookieToJar) has
+    // already removed any server-sent deletion cookies, so re-calling
+    // authenticate() either (a) reuses the existing session if it was
+    // still live server-side, or (b) creates exactly ONE new session
+    // via Basic auth if it wasn't. We MUST NOT cookies_.clear() or
+    // http_client_session_.reset() here — both force a brand-new
+    // controller-side session per 401, and RobotWare 7.7+ caps the
+    // total session pool at 70 per controller. On a cold-booted
+    // controller (which returns 401 for several seconds during boot)
+    // the retry loop in establishRWSConnection would otherwise burn
+    // the entire pool before the station comes up.
+    //
+    // request.erase(COOKIE) is retained because the first sendAndReceive
+    // above already attached the stale Cookie header to the in-flight
+    // request object; scrub it so authenticate()'s sendAndReceive
+    // doesn't double-attach.
     if (response.getStatus() == HTTPResponse::HTTP_UNAUTHORIZED)
     {
-      cookies_.clear();
-      http_client_session_.reset();
       request.erase(HTTPRequest::COOKIE);
       authenticate(request, response, content, response_content);
     }
