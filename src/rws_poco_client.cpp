@@ -54,10 +54,31 @@ namespace rws
 
 bool POCOClient::isCookieDeletion(const Poco::Net::HTTPCookie& cookie)
 {
-  // RFC 6265 §5.3: empty value or Max-Age=0 means "remove."
-  // Poco normalizes a past Expires date into Max-Age <= 0 when the
-  // cookie is parsed from a Set-Cookie header.
-  return cookie.getValue().empty() || cookie.getMaxAge() == 0;
+  // RFC 6265 §5.3: a Set-Cookie response is a deletion instruction when
+  // the value is empty, OR Max-Age == 0, OR Expires is in the past.
+  //
+  // Poco's HTTPResponse::getCookies() converts a parsed Expires
+  // attribute into _maxAge via (exp.timestamp() - now) / 1e6, in
+  // seconds. So a past Expires shows up as a large NEGATIVE getMaxAge(),
+  // NOT as zero. We must therefore detect three states:
+  //
+  //   getMaxAge() == 0   → explicit Max-Age=0 deletion (RFC 6265)
+  //   getMaxAge() <  -1  → past Expires (Poco's normalization)
+  //   getMaxAge() == -1  → session cookie default (NOT deletion)
+  //   getMaxAge() >   0  → future-dated cookie (NOT deletion)
+  //
+  // The -1 sentinel collides with an Expires exactly 1 second in the
+  // past, but that's a vanishingly small window and the worst case is
+  // we treat it as a session cookie and let the controller re-issue
+  // the deletion on the next request.
+  //
+  // Verified against the exact RMF-315 failure cookies via
+  // round-trip parse tests in rws_poco_client_test.cpp.
+  if (cookie.getValue().empty())
+  {
+    return true;
+  }
+  return cookie.getMaxAge() == 0 || cookie.getMaxAge() < -1;
 }
 
 /***********************************************************************************************************************
