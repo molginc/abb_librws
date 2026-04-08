@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 #include <Poco/Net/HTTPCookie.h>
-#include <Poco/Net/NameValueCollection.h>
 
-namespace abb::rws
+namespace abb ::rws
 {
 // Sanity check: prove the new translation unit links against
 // gtest + Poco::Net before we start testing real helpers.
@@ -12,4 +11,4 @@ TEST(POCOClientCookieTest, sanity_PocoHTTPCookieIsConstructible)
   EXPECT_EQ(cookie.getName(), "name");
   EXPECT_EQ(cookie.getValue(), "value");
 }
-}  // namespace abb::rws
+}  // namespace abb ::rws
