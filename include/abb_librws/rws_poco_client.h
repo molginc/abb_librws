@@ -40,6 +40,7 @@
 #include <abb_librws/rws_poco_result.h>
 
 #include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Net/HTTPCookie.h>
 #include <Poco/Net/HTTPCredentials.h>
 #include <Poco/Net/HTTPResponse.h>
 #include <Poco/Net/WebSocket.h>
@@ -148,6 +149,21 @@ public:
    * \return std::string containing the log text. An empty text string is returned if the log is empty.
    */
   std::string getLogTextLatestEvent(bool verbose = false) const;
+
+public:
+  /**
+   * \brief True if a Set-Cookie response is a deletion instruction.
+   *
+   * Per RFC 6265, a server signals "remove this cookie from your jar" by
+   * either sending an empty value or by setting Max-Age=0 (or Expires in
+   * the past, which Poco maps to Max-Age=0). ABB Omnicore uses this to
+   * invalidate a session that hit the 5-minute inactivity timeout, and
+   * the previous client behavior (blindly storing the empty value into
+   * the jar) was the root cause of RMF-315.
+   *
+   * Public so it can be unit-tested in isolation.
+   */
+  static bool isCookieDeletion(const Poco::Net::HTTPCookie& cookie);
 
 private:
   /**

@@ -51,6 +51,15 @@ namespace abb
 {
 namespace rws
 {
+
+bool POCOClient::isCookieDeletion(const Poco::Net::HTTPCookie& cookie)
+{
+  // RFC 6265 §5.3: empty value or Max-Age=0 means "remove."
+  // Poco normalizes a past Expires date into Max-Age <= 0 when the
+  // cookie is parsed from a Set-Cookie header.
+  return cookie.getValue().empty() || cookie.getMaxAge() == 0;
+}
+
 /***********************************************************************************************************************
  * Class definitions: POCOClient
  */
