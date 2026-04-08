@@ -81,6 +81,28 @@ bool POCOClient::isCookieDeletion(const Poco::Net::HTTPCookie& cookie)
   return cookie.getMaxAge() == 0 || cookie.getMaxAge() < -1;
 }
 
+void POCOClient::applyCookieToJar(Poco::Net::NameValueCollection& jar,
+                                  const Poco::Net::HTTPCookie& cookie)
+{
+  const std::string& name = cookie.getName();
+
+  if (isCookieDeletion(cookie))
+  {
+    // Removing-by-name is safe whether or not the entry exists.
+    jar.erase(name);
+    return;
+  }
+
+  if (jar.find(name) != jar.end())
+  {
+    jar.set(name, cookie.getValue());
+  }
+  else
+  {
+    jar.add(name, cookie.getValue());
+  }
+}
+
 /***********************************************************************************************************************
  * Class definitions: POCOClient
  */

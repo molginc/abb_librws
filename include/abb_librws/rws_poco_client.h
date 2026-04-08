@@ -165,6 +165,18 @@ public:
    */
   static bool isCookieDeletion(const Poco::Net::HTTPCookie& cookie);
 
+  /**
+   * \brief Merge a single Set-Cookie response into the in-memory jar.
+   *
+   * If `cookie` is a deletion (see isCookieDeletion), the entry is
+   * removed from `jar`. Otherwise the entry is set (if name already
+   * present) or added (if not).
+   *
+   * Public so it can be unit-tested in isolation.
+   */
+  static void applyCookieToJar(Poco::Net::NameValueCollection& jar,
+                               const Poco::Net::HTTPCookie& cookie);
+
 private:
   /**
    * \brief A struct for containing HTTP info.

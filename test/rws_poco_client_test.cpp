@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <Poco/Net/HTTPCookie.h>
 #include <Poco/Net/HTTPResponse.h>
+#include <Poco/Net/NameValueCollection.h>
 
 #include <abb_librws/rws_poco_client.h>
 
@@ -106,6 +107,93 @@ TEST(POCOClientCookieTest, isCookieDeletion_RMF315_nonEmptyValueWithEpochExpires
   ASSERT_EQ(cookies.size(), 1u);
   EXPECT_TRUE(POCOClient::isCookieDeletion(cookies.front()))
       << "RMF-315: non-empty value with epoch Expires must be detected as deletion";
+}
+
+// ---------------------------------------------------------------------------
+// applyCookieToJar: merge a single inbound cookie into the in-memory jar.
+//
+// On a deletion response we MUST remove the entry rather than overwriting
+// it with an empty value, otherwise the next request resends the dead
+// cookie and the controller stays at 401.
+// ---------------------------------------------------------------------------
+
+TEST(POCOClientCookieTest, applyCookieToJar_addsNewCookie)
+{
+  Poco::Net::NameValueCollection jar;
+  Poco::Net::HTTPCookie cookie("ABBCX", "abc123");
+
+  POCOClient::applyCookieToJar(jar, cookie);
+
+  ASSERT_EQ(jar.size(), 1u);
+  EXPECT_EQ(jar.get("ABBCX"), "abc123");
+}
+
+TEST(POCOClientCookieTest, applyCookieToJar_updatesExistingCookie)
+{
+  Poco::Net::NameValueCollection jar;
+  jar.add("ABBCX", "old_value");
+
+  Poco::Net::HTTPCookie cookie("ABBCX", "new_value");
+  POCOClient::applyCookieToJar(jar, cookie);
+
+  ASSERT_EQ(jar.size(), 1u);
+  EXPECT_EQ(jar.get("ABBCX"), "new_value");
+}
+
+TEST(POCOClientCookieTest, applyCookieToJar_removesOnDeletion_emptyValue)
+{
+  Poco::Net::NameValueCollection jar;
+  jar.add("-http-session-", "session_token");
+
+  Poco::Net::HTTPCookie deletion("-http-session-", "");
+  POCOClient::applyCookieToJar(jar, deletion);
+
+  EXPECT_EQ(jar.size(), 0u);
+  EXPECT_FALSE(jar.has("-http-session-"));
+}
+
+TEST(POCOClientCookieTest, applyCookieToJar_removesOnDeletion_maxAgeZero)
+{
+  Poco::Net::NameValueCollection jar;
+  jar.add("ABBCX", "session_token");
+
+  Poco::Net::HTTPCookie deletion("ABBCX", "deleted");
+  deletion.setMaxAge(0);
+  POCOClient::applyCookieToJar(jar, deletion);
+
+  EXPECT_EQ(jar.size(), 0u);
+  EXPECT_FALSE(jar.has("ABBCX"));
+}
+
+TEST(POCOClientCookieTest, applyCookieToJar_deletionOfMissingCookieIsNoop)
+{
+  Poco::Net::NameValueCollection jar;
+  jar.add("other", "still_here");
+
+  Poco::Net::HTTPCookie deletion("ABBCX", "");
+  POCOClient::applyCookieToJar(jar, deletion);
+
+  ASSERT_EQ(jar.size(), 1u);
+  EXPECT_EQ(jar.get("other"), "still_here");
+}
+
+TEST(POCOClientCookieTest, applyCookieToJar_OmnicoreSessionInvalidationScenario)
+{
+  // Reproduces the exact RMF-315 failure log: jar holds the live cookies,
+  // controller responds with deletions for both, jar must end up empty
+  // so the next request can re-authenticate cleanly.
+  Poco::Net::NameValueCollection jar;
+  jar.add("-http-session-", "abc123");
+  jar.add("ABBCX", "live_session");
+
+  Poco::Net::HTTPCookie del_session("-http-session-", "");
+  Poco::Net::HTTPCookie del_abbcx("ABBCX", "deleted");
+  del_abbcx.setMaxAge(0);
+
+  POCOClient::applyCookieToJar(jar, del_session);
+  POCOClient::applyCookieToJar(jar, del_abbcx);
+
+  EXPECT_EQ(jar.size(), 0u) << "RMF-315: poisoned jar would survive into the next request";
 }
 
 }  // namespace abb ::rws
