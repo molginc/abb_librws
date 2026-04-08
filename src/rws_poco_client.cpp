@@ -327,35 +327,18 @@ void POCOClient::authenticate(HTTPRequest& request, HTTPResponse& response, cons
   // Contact the server, and extract and store the received cookies.
   sendAndReceive(request, response, request_content, response_content);
 
-  // Update cookies with the ones received in the response.
-  // std::vector<HTTPCookie> temp_cookies;
-  // response.getCookies(temp_cookies);
-  for (const auto& header : response)
+  // Repopulate the cookie jar from the auth response via the same canonical
+  // path makeHTTPRequest uses. This guarantees deletion semantics and
+  // multimap safety even if the auth response itself contains deletion
+  // directives. RMF-315.
+  std::vector<HTTPCookie> temp_cookies;
+  response.getCookies(temp_cookies);
+  for (const auto& temp_cookie : temp_cookies)
   {
-    if (header.first == HTTPResponse::SET_COOKIE)
-    {
-      // std::cout << "[DEBUG] Received cookie: " << header.second << std::endl;
-      HTTPCookie cookie(header.second);
-      extractAndStoreCookie(header.second);
-    }
+    applyCookieToJar(cookies_, temp_cookie);
   }
 }
 
-void POCOClient::extractAndStoreCookie(const std::string& cookie_string)
-{
-  // Find the positions of the cookie delimiters.
-  size_t position_1 = cookie_string.find_first_of("=");
-  size_t position_2 = cookie_string.find_first_of(";");
-
-  // Extract and store the cookie (if the delimiters was found).
-  if (position_1 != std::string::npos && position_2 != std::string::npos)
-  {
-    std::string result = cookie_string.substr(0, position_1++);
-    std::string result2 = cookie_string.substr(position_1, position_2 - position_1);
-
-    cookies_.set(result, result2);
-  }
-}
 
 std::string POCOClient::getLogText(bool verbose) const
 {

@@ -297,13 +297,6 @@ private:
                     const std::string& request_content, std::string& response_content);
 
   /**
-   * \brief A method for extracting and storing information from a cookie string.
-   *
-   * \param cookie_string for the cookie string.
-   */
-  void extractAndStoreCookie(const std::string& cookie_string);
-
-  /**
    * \brief A HTTP client session.
    */
   Poco::Net::HTTPClientSession& http_client_session_;
