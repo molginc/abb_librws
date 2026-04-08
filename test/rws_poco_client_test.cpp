@@ -76,6 +76,15 @@ TEST(POCOClientCookieTest, isCookieDeletion_RMF315_emptyValueWithPastExpires)
   std::vector<Poco::Net::HTTPCookie> cookies;
   response.getCookies(cookies);
   ASSERT_EQ(cookies.size(), 1u);
+
+  // Pin Poco's behavior independent of isCookieDeletion: a past Expires
+  // must be normalized into a large NEGATIVE Max-Age (NOT -1, which is
+  // the session-cookie sentinel for "no Max-Age set"). If a Poco upgrade
+  // ever changes this, isCookieDeletion's getMaxAge() < -1 branch becomes
+  // ineffective and we need to know.
+  EXPECT_LT(cookies.front().getMaxAge(), -1)
+      << "Poco normalization changed: past Expires no longer maps to Max-Age < -1";
+
   EXPECT_TRUE(POCOClient::isCookieDeletion(cookies.front()))
       << "RMF-315: empty-value cookie must be detected as deletion";
 }
