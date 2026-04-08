@@ -149,6 +149,39 @@ public:
    */
   std::string getLogTextLatestEvent(bool verbose = false) const;
 
+public:
+  /**
+   * \brief True if a raw Set-Cookie response header is a deletion instruction.
+   *
+   * Per RFC 6265 §5.3, the server signals "remove this cookie" by either:
+   *   - sending an empty cookie value, OR
+   *   - setting Max-Age=0, OR
+   *   - setting Expires to a past timestamp.
+   *
+   * Implemented as a raw-string parser because Poco 1.9.2's
+   * HTTPCookie(NameValueCollection) constructor treats unknown attributes
+   * (including SameSite) as the cookie's own name/value, silently
+   * dropping the real session cookie. See RMF-315 investigation notes.
+   *
+   * Public so it can be unit-tested in isolation.
+   */
+  static bool isSetCookieDeletion(const std::string& raw_set_cookie);
+
+  /**
+   * \brief Parse a raw Set-Cookie response header and apply it to the jar.
+   *
+   * If isSetCookieDeletion(raw_set_cookie) is true, the entry with this
+   * name is erased from jar. Otherwise the name=value pair is set,
+   * replacing the first existing occurrence or inserting if absent.
+   * Malformed headers (no '=') are silently ignored.
+   *
+   * Bypasses Poco 1.9.2's HTTPResponse::getCookies / HTTPCookie parser.
+   *
+   * Public so it can be unit-tested in isolation.
+   */
+  static void applySetCookieToJar(Poco::Net::NameValueCollection& jar,
+                                  const std::string& raw_set_cookie);
+
 private:
   /**
    * \brief A struct for containing HTTP info.
@@ -267,13 +300,6 @@ private:
    */
   void authenticate(Poco::Net::HTTPRequest& request, Poco::Net::HTTPResponse& response,
                     const std::string& request_content, std::string& response_content);
-
-  /**
-   * \brief A method for extracting and storing information from a cookie string.
-   *
-   * \param cookie_string for the cookie string.
-   */
-  void extractAndStoreCookie(const std::string& cookie_string);
 
   /**
    * \brief A HTTP client session.
