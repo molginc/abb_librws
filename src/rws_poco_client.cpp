@@ -200,6 +200,16 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
       http_client_session_.reset();
       request.erase(HTTPRequest::COOKIE);
       sendAndReceive(request, response, content, response_content);
+
+      // Merge any cookies from the retry response too — same canonical
+      // path as the initial merge above, so a session-rotation cookie
+      // issued during 5xx recovery isn't silently dropped. RMF-315 follow-up.
+      temp_cookies.clear();
+      response.getCookies(temp_cookies);
+      for (const auto& temp_cookie : temp_cookies)
+      {
+        applyCookieToJar(cookies_, temp_cookie);
+      }
     }
 
     // RMF-315: if the controller invalidated our session, drop the
