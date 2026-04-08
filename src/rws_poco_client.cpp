@@ -183,19 +183,15 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
   { 
     sendAndReceive(request, response, content, response_content);
 
-    // Check if the server has sent an update for the cookies.
+    // Merge inbound Set-Cookie headers into the jar. Honors RFC 6265
+    // deletion responses (empty value / Max-Age=0 / past Expires) so that
+    // an Omnicore session-invalidation 401 doesn't poison the jar with
+    // dead cookies. See RMF-315.
     std::vector<HTTPCookie> temp_cookies;
     response.getCookies(temp_cookies);
-    for (size_t i = 0; i < temp_cookies.size(); ++i)
+    for (const auto& temp_cookie : temp_cookies)
     {
-      if (cookies_.find(temp_cookies[i].getName()) != cookies_.end())
-      {
-        cookies_.set(temp_cookies[i].getName(), temp_cookies[i].getValue());
-      }
-      else
-      {
-        cookies_.add(temp_cookies[i].getName(), temp_cookies[i].getValue());
-      }
+      applyCookieToJar(cookies_, temp_cookie);
     }
 
     // Check if there was a server error, if so, make another attempt with a clean sheet.
@@ -206,9 +202,17 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
       sendAndReceive(request, response, content, response_content);
     }
 
-    // Check if the request was unauthorized, if so add credentials.
+    // RMF-315: if the controller invalidated our session, drop the
+    // (now-deleted) cookies and reset the underlying TCP session
+    // BEFORE re-authenticating. Otherwise the auth retry resends
+    // the very cookies the server just told us to delete and we
+    // stay wedged at 401 for the lifetime of the process. Mirrors
+    // the existing 5xx recovery branch above.
     if (response.getStatus() == HTTPResponse::HTTP_UNAUTHORIZED)
     {
+      cookies_.clear();
+      http_client_session_.reset();
+      request.erase(HTTPRequest::COOKIE);
       authenticate(request, response, content, response_content);
     }
 
