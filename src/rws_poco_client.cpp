@@ -36,7 +36,13 @@
 
 #include <sstream>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
+#include <Poco/DateTime.h>
+#include <Poco/DateTimeParser.h>
+#include <Poco/Timestamp.h>
+#include <Poco/String.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/NetException.h>
 #include <Poco/StreamCopier.h>
@@ -52,55 +58,163 @@ namespace abb
 namespace rws
 {
 
-bool POCOClient::isCookieDeletion(const Poco::Net::HTTPCookie& cookie)
+namespace
 {
-  // RFC 6265 §5.3: a Set-Cookie response is a deletion instruction when
-  // the value is empty, OR Max-Age == 0, OR Expires is in the past.
-  //
-  // Poco's HTTPResponse::getCookies() converts a parsed Expires
-  // attribute into _maxAge via (exp.timestamp() - now) / 1e6, in
-  // seconds. So a past Expires shows up as a large NEGATIVE getMaxAge(),
-  // NOT as zero. We must therefore detect three states:
-  //
-  //   getMaxAge() == 0   → explicit Max-Age=0 deletion (RFC 6265)
-  //   getMaxAge() <  -1  → past Expires (Poco's normalization)
-  //   getMaxAge() == -1  → session cookie default (NOT deletion)
-  //   getMaxAge() >   0  → future-dated cookie (NOT deletion)
-  //
-  // The -1 sentinel collides with an Expires exactly 1 second in the
-  // past, but that's a vanishingly small window and the worst case is
-  // we treat it as a session cookie and let the controller re-issue
-  // the deletion on the next request.
-  //
-  // Verified against the exact RMF-315 failure cookies via
-  // round-trip parse tests in rws_poco_client_test.cpp.
-  if (cookie.getValue().empty())
+// Trim ASCII whitespace from both ends, in place.
+void trimInPlace(std::string& s)
+{
+  auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
+  while (!s.empty() && is_space(static_cast<unsigned char>(s.front())))
+  {
+    s.erase(s.begin());
+  }
+  while (!s.empty() && is_space(static_cast<unsigned char>(s.back())))
+  {
+    s.pop_back();
+  }
+}
+
+// Check case-insensitively whether `attrs` contains "max-age=0" as a
+// standalone token (i.e., the character after the '0' is not a digit).
+bool containsMaxAgeZero(const std::string& lower_attrs)
+{
+  const std::string needle = "max-age=0";
+  size_t pos = 0;
+  while ((pos = lower_attrs.find(needle, pos)) != std::string::npos)
+  {
+    const size_t after = pos + needle.size();
+    if (after == lower_attrs.size() ||
+        !std::isdigit(static_cast<unsigned char>(lower_attrs[after])))
+    {
+      return true;
+    }
+    pos = after;
+  }
+  return false;
+}
+
+// Extract the Expires attribute value (original case) from a raw
+// Set-Cookie attributes string. Returns empty if not present.
+std::string extractExpiresValue(const std::string& attrs, const std::string& lower_attrs)
+{
+  const std::string needle = "expires=";
+  const size_t pos = lower_attrs.find(needle);
+  if (pos == std::string::npos)
+  {
+    return {};
+  }
+  const size_t value_start = pos + needle.size();
+  size_t value_end = attrs.find(';', value_start);
+  if (value_end == std::string::npos)
+  {
+    value_end = attrs.size();
+  }
+  std::string value = attrs.substr(value_start, value_end - value_start);
+  trimInPlace(value);
+  return value;
+}
+}  // namespace
+
+bool POCOClient::isSetCookieDeletion(const std::string& raw_set_cookie)
+{
+  // Split the header into "name=value" head and attributes tail.
+  const size_t first_semi = raw_set_cookie.find(';');
+  const std::string head = (first_semi == std::string::npos)
+                               ? raw_set_cookie
+                               : raw_set_cookie.substr(0, first_semi);
+
+  const size_t eq = head.find('=');
+  if (eq == std::string::npos)
+  {
+    return false;  // malformed: let applySetCookieToJar ignore it
+  }
+
+  // Empty-value deletion.
+  std::string value = head.substr(eq + 1);
+  trimInPlace(value);
+  if (value.empty())
   {
     return true;
   }
-  return cookie.getMaxAge() == 0 || cookie.getMaxAge() < -1;
+
+  if (first_semi == std::string::npos)
+  {
+    return false;
+  }
+
+  // Lowercase the attribute portion for case-insensitive scanning.
+  std::string attrs = raw_set_cookie.substr(first_semi + 1);
+  std::string lower_attrs;
+  lower_attrs.reserve(attrs.size());
+  for (char c : attrs)
+  {
+    lower_attrs.push_back(
+        static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+  }
+
+  // Max-Age=0 deletion.
+  if (containsMaxAgeZero(lower_attrs))
+  {
+    return true;
+  }
+
+  // Past Expires deletion.
+  const std::string expires_value = extractExpiresValue(attrs, lower_attrs);
+  if (!expires_value.empty())
+  {
+    try
+    {
+      int tzd = 0;
+      Poco::DateTime dt = Poco::DateTimeParser::parse(expires_value, tzd);
+      dt.makeUTC(tzd);
+      if (dt.timestamp() < Poco::Timestamp())
+      {
+        return true;
+      }
+    }
+    catch (const Poco::Exception&)
+    {
+      // Unparseable date — be conservative and do not treat as deletion.
+    }
+  }
+
+  return false;
 }
 
-void POCOClient::applyCookieToJar(Poco::Net::NameValueCollection& jar,
-                                  const Poco::Net::HTTPCookie& cookie)
+void POCOClient::applySetCookieToJar(Poco::Net::NameValueCollection& jar,
+                                     const std::string& raw_set_cookie)
 {
-  const std::string& name = cookie.getName();
+  // Extract name=value (the head of the header before the first ';').
+  const size_t first_semi = raw_set_cookie.find(';');
+  const std::string head = (first_semi == std::string::npos)
+                               ? raw_set_cookie
+                               : raw_set_cookie.substr(0, first_semi);
 
-  if (isCookieDeletion(cookie))
+  const size_t eq = head.find('=');
+  if (eq == std::string::npos)
   {
-    // erase() removes ALL entries with this name, so any prior
-    // duplicates are cleared atomically.
+    return;  // malformed, silently ignore
+  }
+
+  std::string name = head.substr(0, eq);
+  std::string value = head.substr(eq + 1);
+  trimInPlace(name);
+  trimInPlace(value);
+  if (name.empty())
+  {
+    return;
+  }
+
+  if (isSetCookieDeletion(raw_set_cookie))
+  {
     jar.erase(name);
     return;
   }
 
-  // set() is insert-or-update on the FIRST occurrence. We never call
-  // add() for cookies because NameValueCollection allows duplicate
-  // keys and add() would create a stale shadow entry — set() then
-  // only updates the first one and the shadow gets resent on the
-  // next request. See Poco::Net::NameValueCollection docs and the
-  // RMF-315 review thread for context.
-  jar.set(name, cookie.getValue());
+  // set() is insert-or-update on the first occurrence. Never use add()
+  // because NameValueCollection allows duplicate keys and add() would
+  // create stale shadow entries.
+  jar.set(name, value);
 }
 
 /***********************************************************************************************************************
@@ -183,15 +297,17 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
   { 
     sendAndReceive(request, response, content, response_content);
 
-    // Merge inbound Set-Cookie headers into the jar. Honors RFC 6265
-    // deletion responses (empty value / Max-Age=0 / past Expires) so that
-    // an Omnicore session-invalidation 401 doesn't poison the jar with
-    // dead cookies. See RMF-315.
-    std::vector<HTTPCookie> temp_cookies;
-    response.getCookies(temp_cookies);
-    for (const auto& temp_cookie : temp_cookies)
+    // Merge inbound Set-Cookie headers into the jar using our own raw-string
+    // parser. Bypasses Poco 1.9.2's HTTPCookie(NameValueCollection) which
+    // mis-handles SameSite=None by assigning it as the cookie name — that
+    // bug silently dropped the real session cookies and caused the
+    // controller to create a new session on every request (RMF-315).
+    for (const auto& header : response)
     {
-      applyCookieToJar(cookies_, temp_cookie);
+      if (Poco::icompare(header.first, HTTPResponse::SET_COOKIE) == 0)
+      {
+        applySetCookieToJar(cookies_, header.second);
+      }
     }
 
     // Check if there was a server error, if so, make another attempt with a clean sheet.
@@ -201,14 +317,13 @@ POCOResult POCOClient::makeHTTPRequest(const std::string& method, const std::str
       request.erase(HTTPRequest::COOKIE);
       sendAndReceive(request, response, content, response_content);
 
-      // Merge any cookies from the retry response too — same canonical
-      // path as the initial merge above, so a session-rotation cookie
-      // issued during 5xx recovery isn't silently dropped. RMF-315 follow-up.
-      temp_cookies.clear();
-      response.getCookies(temp_cookies);
-      for (const auto& temp_cookie : temp_cookies)
+      // Merge any cookies from the retry response too.
+      for (const auto& header : response)
       {
-        applyCookieToJar(cookies_, temp_cookie);
+        if (Poco::icompare(header.first, HTTPResponse::SET_COOKIE) == 0)
+        {
+          applySetCookieToJar(cookies_, header.second);
+        }
       }
     }
 
@@ -346,15 +461,16 @@ void POCOClient::authenticate(HTTPRequest& request, HTTPResponse& response, cons
   // Contact the server, and extract and store the received cookies.
   sendAndReceive(request, response, request_content, response_content);
 
-  // Repopulate the cookie jar from the auth response via the same canonical
-  // path makeHTTPRequest uses. This guarantees deletion semantics and
-  // multimap safety even if the auth response itself contains deletion
-  // directives. RMF-315.
-  std::vector<HTTPCookie> temp_cookies;
-  response.getCookies(temp_cookies);
-  for (const auto& temp_cookie : temp_cookies)
+  // Repopulate the cookie jar from the auth response using the same
+  // raw-header parser as makeHTTPRequest. Do NOT use Poco's getCookies()
+  // here — it mis-handles SameSite=None in Poco 1.9.2 and the real
+  // session cookies would be silently dropped.
+  for (const auto& header : response)
   {
-    applyCookieToJar(cookies_, temp_cookie);
+    if (Poco::icompare(header.first, HTTPResponse::SET_COOKIE) == 0)
+    {
+      applySetCookieToJar(cookies_, header.second);
+    }
   }
 }
 

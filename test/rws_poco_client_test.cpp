@@ -9,215 +9,209 @@ namespace abb ::rws
 {
 
 // ---------------------------------------------------------------------------
-// isCookieDeletion: detect server-sent "delete this cookie" responses.
+// isSetCookieDeletion: detect server-sent "delete this cookie" responses
+// from a RAW Set-Cookie header string. We bypass Poco's HTTPCookie
+// constructor because Poco 1.9.2 mis-handles the SameSite attribute —
+// it treats unknown attributes as the cookie's own name/value, silently
+// dropping the real session cookie. See RMF-315 investigation notes.
 //
-// Per RFC 6265 the server signals deletion by either:
-//   * sending an empty cookie value, or
-//   * setting Max-Age=0, or
-//   * setting Expires to a past timestamp.
-// ABB Omnicore uses the first two when invalidating an idle session, e.g.:
-//   Set-Cookie: -http-session-=; expires=...23:16:56 GMT
-//   Set-Cookie: ABBCX=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT; ...
+// RFC 6265 §5.3: a Set-Cookie is a deletion when the value is empty,
+// OR Max-Age=0, OR Expires is set to a past timestamp.
 // ---------------------------------------------------------------------------
 
-TEST(POCOClientCookieTest, isCookieDeletion_emptyValueIsDeletion)
+TEST(POCOClientCookieTest, isSetCookieDeletion_emptyValueIsDeletion)
 {
-  Poco::Net::HTTPCookie cookie("-http-session-", "");
-  EXPECT_TRUE(POCOClient::isCookieDeletion(cookie));
+  EXPECT_TRUE(POCOClient::isSetCookieDeletion(
+      "-http-session-=; path=/; domain=192.168.11.11; expires=Tue, 07 Apr 2026 23:16:56 GMT"));
 }
 
-TEST(POCOClientCookieTest, isCookieDeletion_maxAgeZeroIsDeletion)
+TEST(POCOClientCookieTest, isSetCookieDeletion_emptyValueNoAttrs)
 {
-  Poco::Net::HTTPCookie cookie("ABBCX", "deleted");
-  cookie.setMaxAge(0);
-  EXPECT_TRUE(POCOClient::isCookieDeletion(cookie));
+  EXPECT_TRUE(POCOClient::isSetCookieDeletion("name="));
 }
 
-TEST(POCOClientCookieTest, isCookieDeletion_normalValueIsNotDeletion)
+TEST(POCOClientCookieTest, isSetCookieDeletion_maxAgeZeroIsDeletion)
 {
-  Poco::Net::HTTPCookie cookie("-http-session-", "abc123");
-  EXPECT_FALSE(POCOClient::isCookieDeletion(cookie));
+  EXPECT_TRUE(POCOClient::isSetCookieDeletion(
+      "ABBCX=deleted; Max-Age=0; Path=/; Domain=192.168.11.11"));
 }
 
-TEST(POCOClientCookieTest, isCookieDeletion_normalValueWithMaxAgeUnsetIsNotDeletion)
+TEST(POCOClientCookieTest, isSetCookieDeletion_maxAgeZeroCaseInsensitive)
 {
-  // Default Max-Age is -1 (session cookie, no explicit expiry) — must NOT
-  // be treated as deletion.
-  Poco::Net::HTTPCookie cookie("ABBCX", "live");
-  EXPECT_EQ(cookie.getMaxAge(), -1);
-  EXPECT_FALSE(POCOClient::isCookieDeletion(cookie));
+  EXPECT_TRUE(POCOClient::isSetCookieDeletion(
+      "ABBCX=deleted; MAX-AGE=0; Path=/"));
 }
 
-TEST(POCOClientCookieTest, isCookieDeletion_positiveMaxAgeIsNotDeletion)
+TEST(POCOClientCookieTest, isSetCookieDeletion_maxAgeZeroNotPrefixOfLargerNumber)
 {
-  Poco::Net::HTTPCookie cookie("ABBCX", "live");
-  cookie.setMaxAge(3600);
-  EXPECT_FALSE(POCOClient::isCookieDeletion(cookie));
+  // "Max-Age=04000" should NOT be treated as deletion even though it starts with '0'.
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion(
+      "ABBCX=live; Max-Age=04000; Path=/"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_maxAgeNonZeroIsNotDeletion)
+{
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion(
+      "ABBCX=live; Max-Age=3600; Path=/"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_epochExpiresIsDeletion)
+{
+  // The exact ABBCX deletion cookie from the RMF-315 failure log.
+  EXPECT_TRUE(POCOClient::isSetCookieDeletion(
+      "ABBCX=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT; Path=/; Domain=192.168.11.12; HttpOnly"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_pastExpiresIsDeletion)
+{
+  // An Expires clearly in the past (regardless of format variant).
+  EXPECT_TRUE(POCOClient::isSetCookieDeletion(
+      "name=value; Expires=Mon, 01 Jan 2001 00:00:00 GMT"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_futureExpiresIsNotDeletion)
+{
+  // Far-future Expires — must NOT be classified as deletion.
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion(
+      "name=value; Expires=Fri, 31 Dec 2099 23:59:59 GMT"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_malformedExpiresIsNotDeletion)
+{
+  // If Expires can't be parsed, don't treat as deletion (be conservative).
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion(
+      "name=value; Expires=garbage data"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_realOmnicoreSessionIsNotDeletion)
+{
+  // The EXACT live session cookies captured from a working Omnicore via curl.
+  // These have no Expires and no Max-Age attributes.
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion(
+      "-http-session-=1336::http.session::14841e23a7eb0ddc854e1f4643a91898;"
+      " path=/; domain=192.168.11.11; secure; httponly; SameSite=None"));
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion(
+      "ABBCX=1238181176; path=/; domain=192.168.11.11;"
+      " secure; httponly; SameSite=None"));
+}
+
+TEST(POCOClientCookieTest, isSetCookieDeletion_malformedNoEquals)
+{
+  EXPECT_FALSE(POCOClient::isSetCookieDeletion("malformed_no_equals"));
 }
 
 // ---------------------------------------------------------------------------
-// Round-trip parse tests: take the EXACT Set-Cookie strings from the
-// RMF-315 failure log, parse them via Poco's HTTPResponse::getCookies()
-// (the same code path makeHTTPRequest uses), and assert that
-// isCookieDeletion correctly identifies each as a deletion.
+// applySetCookieToJar: merge a raw Set-Cookie header into the jar.
 //
-// These tests anchor our assumption about Poco's parsing behavior so it
-// can never silently regress.
+// On deletion → erase entry from jar.
+// Otherwise → set name=value.
+// Must NOT use Poco's HTTPCookie parser (broken for SameSite in 1.9.2).
 // ---------------------------------------------------------------------------
 
-TEST(POCOClientCookieTest, isCookieDeletion_RMF315_emptyValueWithPastExpires)
-{
-  // -http-session-=; path=/; domain=192.168.11.12; expires=Tue, 07 Apr 2026 23:16:56 GMT
-  // (Empty value, past Expires.)
-  Poco::Net::HTTPResponse response;
-  response.add("Set-Cookie",
-               "-http-session-=; path=/; domain=192.168.11.12; "
-               "expires=Tue, 07 Apr 2026 23:16:56 GMT");
-
-  std::vector<Poco::Net::HTTPCookie> cookies;
-  response.getCookies(cookies);
-  ASSERT_EQ(cookies.size(), 1u);
-
-  // Pin Poco's behavior independent of isCookieDeletion: a past Expires
-  // must be normalized into a large NEGATIVE Max-Age (NOT -1, which is
-  // the session-cookie sentinel for "no Max-Age set"). If a Poco upgrade
-  // ever changes this, isCookieDeletion's getMaxAge() < -1 branch becomes
-  // ineffective and we need to know.
-  EXPECT_LT(cookies.front().getMaxAge(), -1)
-      << "Poco normalization changed: past Expires no longer maps to Max-Age < -1";
-
-  EXPECT_TRUE(POCOClient::isCookieDeletion(cookies.front()))
-      << "RMF-315: empty-value cookie must be detected as deletion";
-}
-
-TEST(POCOClientCookieTest, isCookieDeletion_RMF315_nonEmptyValueWithEpochExpires)
-{
-  // ABBCX=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT; Path=/; Domain=192.168.11.12; HttpOnly
-  // (Non-empty value 'deleted', Expires set to Unix epoch.)
-  // This is the load-bearing case: if Poco does NOT normalize past
-  // Expires into Max-Age <= 0, our helper would silently miss this
-  // cookie and RMF-315 would persist.
-  Poco::Net::HTTPResponse response;
-  response.add("Set-Cookie",
-               "ABBCX=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT; "
-               "Path=/; Domain=192.168.11.12; HttpOnly");
-
-  std::vector<Poco::Net::HTTPCookie> cookies;
-  response.getCookies(cookies);
-  ASSERT_EQ(cookies.size(), 1u);
-  EXPECT_TRUE(POCOClient::isCookieDeletion(cookies.front()))
-      << "RMF-315: non-empty value with epoch Expires must be detected as deletion";
-}
-
-// ---------------------------------------------------------------------------
-// applyCookieToJar: merge a single inbound cookie into the in-memory jar.
-//
-// On a deletion response we MUST remove the entry rather than overwriting
-// it with an empty value, otherwise the next request resends the dead
-// cookie and the controller stays at 401.
-// ---------------------------------------------------------------------------
-
-TEST(POCOClientCookieTest, applyCookieToJar_addsNewCookie)
+TEST(POCOClientCookieTest, applySetCookieToJar_addsNewCookie)
 {
   Poco::Net::NameValueCollection jar;
-  Poco::Net::HTTPCookie cookie("ABBCX", "abc123");
-
-  POCOClient::applyCookieToJar(jar, cookie);
-
+  POCOClient::applySetCookieToJar(jar,
+      "-http-session-=abc123; path=/; domain=192.168.11.11; secure; httponly; SameSite=None");
   ASSERT_EQ(jar.size(), 1u);
-  EXPECT_EQ(jar.get("ABBCX"), "abc123");
+  EXPECT_EQ(jar.get("-http-session-"), "abc123");
 }
 
-TEST(POCOClientCookieTest, applyCookieToJar_updatesExistingCookie)
+TEST(POCOClientCookieTest, applySetCookieToJar_updatesExistingCookie)
 {
   Poco::Net::NameValueCollection jar;
   jar.add("ABBCX", "old_value");
-
-  Poco::Net::HTTPCookie cookie("ABBCX", "new_value");
-  POCOClient::applyCookieToJar(jar, cookie);
-
+  POCOClient::applySetCookieToJar(jar, "ABBCX=new_value; path=/");
   ASSERT_EQ(jar.size(), 1u);
   EXPECT_EQ(jar.get("ABBCX"), "new_value");
 }
 
-TEST(POCOClientCookieTest, applyCookieToJar_removesOnDeletion_emptyValue)
+TEST(POCOClientCookieTest, applySetCookieToJar_erasesOnEmptyValueDeletion)
 {
   Poco::Net::NameValueCollection jar;
   jar.add("-http-session-", "session_token");
-
-  Poco::Net::HTTPCookie deletion("-http-session-", "");
-  POCOClient::applyCookieToJar(jar, deletion);
-
+  POCOClient::applySetCookieToJar(jar,
+      "-http-session-=; path=/; domain=192.168.11.12; expires=Tue, 07 Apr 2026 23:16:56 GMT");
   EXPECT_EQ(jar.size(), 0u);
   EXPECT_FALSE(jar.has("-http-session-"));
 }
 
-TEST(POCOClientCookieTest, applyCookieToJar_removesOnDeletion_maxAgeZero)
+TEST(POCOClientCookieTest, applySetCookieToJar_erasesOnMaxAgeZeroDeletion)
 {
   Poco::Net::NameValueCollection jar;
   jar.add("ABBCX", "session_token");
-
-  Poco::Net::HTTPCookie deletion("ABBCX", "deleted");
-  deletion.setMaxAge(0);
-  POCOClient::applyCookieToJar(jar, deletion);
-
+  POCOClient::applySetCookieToJar(jar, "ABBCX=deleted; Max-Age=0; Path=/");
   EXPECT_EQ(jar.size(), 0u);
   EXPECT_FALSE(jar.has("ABBCX"));
 }
 
-TEST(POCOClientCookieTest, applyCookieToJar_deletionOfMissingCookieIsNoop)
+TEST(POCOClientCookieTest, applySetCookieToJar_erasesOnEpochExpiresDeletion)
 {
   Poco::Net::NameValueCollection jar;
-  jar.add("other", "still_here");
-
-  Poco::Net::HTTPCookie deletion("ABBCX", "");
-  POCOClient::applyCookieToJar(jar, deletion);
-
-  ASSERT_EQ(jar.size(), 1u);
-  EXPECT_EQ(jar.get("other"), "still_here");
+  jar.add("ABBCX", "session_token");
+  POCOClient::applySetCookieToJar(jar,
+      "ABBCX=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT; Path=/");
+  EXPECT_EQ(jar.size(), 0u);
+  EXPECT_FALSE(jar.has("ABBCX"));
 }
 
-TEST(POCOClientCookieTest, applyCookieToJar_OmnicoreSessionInvalidationScenario)
+TEST(POCOClientCookieTest, applySetCookieToJar_neverCreatesDuplicateKeys)
 {
-  // Reproduces the exact RMF-315 failure log: jar holds the live cookies,
-  // controller responds with deletions for both, jar must end up empty
-  // so the next request can re-authenticate cleanly.
+  // Poco::Net::NameValueCollection is multimap-style; set() updates only the
+  // first occurrence. Apply the same name twice to verify we never use add().
   Poco::Net::NameValueCollection jar;
-  jar.add("-http-session-", "abc123");
-  jar.add("ABBCX", "live_session");
-
-  Poco::Net::HTTPCookie del_session("-http-session-", "");
-  Poco::Net::HTTPCookie del_abbcx("ABBCX", "deleted");
-  del_abbcx.setMaxAge(0);
-
-  POCOClient::applyCookieToJar(jar, del_session);
-  POCOClient::applyCookieToJar(jar, del_abbcx);
-
-  EXPECT_EQ(jar.size(), 0u) << "RMF-315: poisoned jar would survive into the next request";
+  POCOClient::applySetCookieToJar(jar, "ABBCX=first; path=/");
+  POCOClient::applySetCookieToJar(jar, "ABBCX=second; path=/");
+  ASSERT_EQ(jar.size(), 1u);
+  EXPECT_EQ(jar.get("ABBCX"), "second");
 }
 
-TEST(POCOClientCookieTest, applyCookieToJar_neverCreatesDuplicateKeys)
+TEST(POCOClientCookieTest, applySetCookieToJar_ignoresMalformedHeader)
 {
-  // Poco::Net::NameValueCollection is multimap-style ("There can be
-  // more than one name-value pair with the same name" — see
-  // NameValueCollection.h). If applyCookieToJar ever used add()
-  // instead of set() for an existing key, two entries would coexist
-  // and the stale one would survive future updates. Pin set()
-  // semantics so a future "optimization" can't reintroduce the bug.
+  Poco::Net::NameValueCollection jar;
+  POCOClient::applySetCookieToJar(jar, "this has no equals sign");
+  EXPECT_EQ(jar.size(), 0u);
+}
+
+TEST(POCOClientCookieTest, applySetCookieToJar_realOmnicoreSessionCookies)
+{
+  // THE critical regression test: the EXACT Set-Cookie strings from a working
+  // ABB Omnicore controller. Our branch was failing because Poco 1.9.2's
+  // HTTPCookie(NameValueCollection) mis-handles SameSite=None, causing the
+  // real session cookies to be silently replaced with SameSite=None. This
+  // test proves our raw-string parser stores them correctly.
   Poco::Net::NameValueCollection jar;
 
-  Poco::Net::HTTPCookie first("ABBCX", "value_one");
-  POCOClient::applyCookieToJar(jar, first);
-  ASSERT_EQ(jar.size(), 1u);
+  POCOClient::applySetCookieToJar(jar,
+      "-http-session-=1336::http.session::14841e23a7eb0ddc854e1f4643a91898;"
+      " path=/; domain=192.168.11.11; secure; httponly; SameSite=None");
+  POCOClient::applySetCookieToJar(jar,
+      "ABBCX=1238181176; path=/; domain=192.168.11.11;"
+      " secure; httponly; SameSite=None");
 
-  // Apply a second non-deletion cookie with the SAME name. Naive add()
-  // would grow the jar to 2 entries; correct set() leaves it at 1.
-  Poco::Net::HTTPCookie second("ABBCX", "value_two");
-  POCOClient::applyCookieToJar(jar, second);
+  ASSERT_EQ(jar.size(), 2u);
+  EXPECT_TRUE(jar.has("-http-session-"));
+  EXPECT_TRUE(jar.has("ABBCX"));
+  EXPECT_EQ(jar.get("-http-session-"),
+            "1336::http.session::14841e23a7eb0ddc854e1f4643a91898");
+  EXPECT_EQ(jar.get("ABBCX"), "1238181176");
+}
 
-  EXPECT_EQ(jar.size(), 1u)
-      << "applyCookieToJar must not create duplicate keys for the same cookie name";
-  EXPECT_EQ(jar.get("ABBCX"), "value_two");
+TEST(POCOClientCookieTest, applySetCookieToJar_RMF315InvalidationScenario)
+{
+  // The exact RMF-315 failure pattern: server sends deletions for both
+  // cookies, jar must end empty so the next request can re-authenticate.
+  Poco::Net::NameValueCollection jar;
+  jar.add("-http-session-", "live_session_id");
+  jar.add("ABBCX", "live_abbcx_value");
+
+  POCOClient::applySetCookieToJar(jar,
+      "-http-session-=; path=/; domain=192.168.11.12; expires=Tue, 07 Apr 2026 23:16:56 GMT");
+  POCOClient::applySetCookieToJar(jar,
+      "ABBCX=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT; Path=/; Domain=192.168.11.12; HttpOnly");
+
+  EXPECT_EQ(jar.size(), 0u)
+      << "RMF-315: jar should be empty so next request can re-authenticate cleanly";
 }
 
 }  // namespace abb ::rws

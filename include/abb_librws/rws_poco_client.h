@@ -40,7 +40,6 @@
 #include <abb_librws/rws_poco_result.h>
 
 #include <Poco/Net/HTTPClientSession.h>
-#include <Poco/Net/HTTPCookie.h>
 #include <Poco/Net/HTTPCredentials.h>
 #include <Poco/Net/HTTPResponse.h>
 #include <Poco/Net/WebSocket.h>
@@ -152,30 +151,36 @@ public:
 
 public:
   /**
-   * \brief True if a Set-Cookie response is a deletion instruction.
+   * \brief True if a raw Set-Cookie response header is a deletion instruction.
    *
-   * Per RFC 6265, a server signals "remove this cookie from your jar" by
-   * either sending an empty value or by setting Max-Age=0 (or Expires in
-   * the past, which Poco maps to Max-Age=0). ABB Omnicore uses this to
-   * invalidate a session that hit the 5-minute inactivity timeout, and
-   * the previous client behavior (blindly storing the empty value into
-   * the jar) was the root cause of RMF-315.
+   * Per RFC 6265 §5.3, the server signals "remove this cookie" by either:
+   *   - sending an empty cookie value, OR
+   *   - setting Max-Age=0, OR
+   *   - setting Expires to a past timestamp.
+   *
+   * Implemented as a raw-string parser because Poco 1.9.2's
+   * HTTPCookie(NameValueCollection) constructor treats unknown attributes
+   * (including SameSite) as the cookie's own name/value, silently
+   * dropping the real session cookie. See RMF-315 investigation notes.
    *
    * Public so it can be unit-tested in isolation.
    */
-  static bool isCookieDeletion(const Poco::Net::HTTPCookie& cookie);
+  static bool isSetCookieDeletion(const std::string& raw_set_cookie);
 
   /**
-   * \brief Merge a single Set-Cookie response into the in-memory jar.
+   * \brief Parse a raw Set-Cookie response header and apply it to the jar.
    *
-   * If `cookie` is a deletion (see isCookieDeletion), the entry is
-   * removed from `jar`. Otherwise the entry is set (if name already
-   * present) or added (if not).
+   * If isSetCookieDeletion(raw_set_cookie) is true, the entry with this
+   * name is erased from jar. Otherwise the name=value pair is set,
+   * replacing the first existing occurrence or inserting if absent.
+   * Malformed headers (no '=') are silently ignored.
+   *
+   * Bypasses Poco 1.9.2's HTTPResponse::getCookies / HTTPCookie parser.
    *
    * Public so it can be unit-tested in isolation.
    */
-  static void applyCookieToJar(Poco::Net::NameValueCollection& jar,
-                               const Poco::Net::HTTPCookie& cookie);
+  static void applySetCookieToJar(Poco::Net::NameValueCollection& jar,
+                                  const std::string& raw_set_cookie);
 
 private:
   /**
