@@ -26,8 +26,8 @@ endif()
 # We need at least 1.4.3 because of WebSocket support.
 find_package(Poco 1.4.3 REQUIRED COMPONENTS Foundation Net Util XML NetSSL)
 
-## Find boost exception library
-find_package(Boost REQUIRED COMPONENTS exception)
+## Boost headers only (Boost.Exception / diagnostic_information.hpp are header-only here; no separate link lib).
+find_package(Boost REQUIRED)
 
 ###########
 ## Build ##
@@ -94,9 +94,7 @@ endif()
 ## Test ##
 ##########
 
-option(MYPROJECT_BUILD_TESTING "Build the testing tree when building as a dependency" OFF)
-
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
   enable_testing()
 
