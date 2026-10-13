@@ -108,6 +108,21 @@ public:
   RWSResult getConfigurationInstances(const std::string& topic, const std::string& type);
 
   /**
+   * \brief A method for setting attribute values of one configuration instance.
+   *
+   * \param topic specifying the configuration topic.
+   * \param type specifying the type in the configuration topic.
+   * \param instance specifying the instance's name.
+   * \param attribute_values mapping each attribute's RWS name to its new value.
+   *
+   * \throw \a RWSError if something goes wrong.
+   */
+  void setConfigurationInstance(const std::string& topic,
+                                const std::string& type,
+                                const std::string& instance,
+                                const std::map<std::string, std::string>& attribute_values);
+
+  /**
    * \brief A method for retrieving all available IO signals on the controller.
    *
    * \return RWSResult containing the result.
