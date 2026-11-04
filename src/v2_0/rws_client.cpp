@@ -55,6 +55,19 @@ namespace abb ::rws ::v2_0
 {
 using namespace Poco::Net;
 
+namespace
+{
+// Build a ProtocolError message naming the request, and the controller's HTTP status, reason and response content
+std::string protocolErrorMessage(const std::string& http_method, const std::string& uri, const POCOResult& result)
+{
+  std::ostringstream message_stream;
+  message_stream << "HTTP response status not accepted: " << http_method << " " << uri << " -> " << result.httpStatus()
+                 << " " << result.reason() << ": " << result.content();
+  std::string message = message_stream.str();
+  return message;
+}
+}  // namespace
+
 /***********************************************************************************************************************
  * Class definitions: RWSClient
  */
@@ -119,16 +132,18 @@ void RWSClient::setConfigurationInstance(const std::string& topic,
                                          const std::map<std::string, std::string>& attribute_values)
 {
   // Build the URI from the RWS manual's "Update CFG instance" request.
-  // NOTE: 3HAC050973 documents this URI for RWS 1.0; it is unconfirmed on RWS 2.0 (OmniCore).
+  // NOTE: 3HAC050973 documents this URI for RWS 1.0; an OmniCore controller accepted it on 2026-11-04.
   std::string uri = generateConfigurationPath(topic, type) + Resources::INSTANCES + "/" + instance + "?action=set";
 
-  // Join the attributes as form-encoded name=value pairs
+  // Join the attributes as form-encoded name=[value,1] pairs, the bracket representation RWS 2.0 accepts
+  // NOTE: an OmniCore controller rejects a bare name=value with "incorrect value representation"; no ABB document
+  // in hand defines the trailing 1.
   std::string content;
   for (const auto& attribute_value : attribute_values)
   {
     if (!content.empty())
       content += "&";
-    content += attribute_value.first + "=" + attribute_value.second;
+    content += attribute_value.first + "=[" + attribute_value.second + ",1]";
   }
 
   std::string content_type = "application/x-www-form-urlencoded;v=2.0";
@@ -335,7 +350,7 @@ POCOResult RWSClient::httpGet(const std::string& uri)
     }
 
     BOOST_THROW_EXCEPTION(
-      ProtocolError{ "HTTP response status not accepted" }
+      ProtocolError{ protocolErrorMessage("GET", uri, result) }
       << HttpMethodErrorInfo{ "GET" } 
       << UriErrorInfo{ uri } 
       << HttpStatusErrorInfo{ result.httpStatus() }
@@ -353,7 +368,7 @@ POCOResult RWSClient::httpPost(const std::string& uri, const std::string& conten
   POCOResult const result = http_client_.httpPost(uri, content, content_type);
 
   if (result.httpStatus() != HTTPResponse::HTTP_NO_CONTENT && result.httpStatus() != HTTPResponse::HTTP_OK)
-    BOOST_THROW_EXCEPTION(ProtocolError{ "HTTP response status not accepted" }
+    BOOST_THROW_EXCEPTION(ProtocolError{ protocolErrorMessage("POST", uri, result) }
                           << HttpMethodErrorInfo{ "POST" } << UriErrorInfo{ uri }
                           << HttpStatusErrorInfo{ result.httpStatus() }
                           << HttpResponseContentErrorInfo{ result.content() } << HttpRequestContentErrorInfo{ content }
@@ -367,7 +382,7 @@ POCOResult RWSClient::httpPut(const std::string& uri, const std::string& content
   POCOResult const result = http_client_.httpPut(uri, content, content_type);
 
   if (result.httpStatus() != HTTPResponse::HTTP_OK && result.httpStatus() != HTTPResponse::HTTP_CREATED)
-    BOOST_THROW_EXCEPTION(ProtocolError{ "HTTP response status not accepted" }
+    BOOST_THROW_EXCEPTION(ProtocolError{ protocolErrorMessage("PUT", uri, result) }
                           << HttpMethodErrorInfo{ "PUT" } << UriErrorInfo{ uri }
                           << HttpStatusErrorInfo{ result.httpStatus() }
                           << HttpResponseContentErrorInfo{ result.content() } << HttpRequestContentErrorInfo{ content }
@@ -380,7 +395,7 @@ POCOResult RWSClient::httpDelete(const std::string& uri)
 {
   POCOResult const result = http_client_.httpDelete(uri);
   if (result.httpStatus() != HTTPResponse::HTTP_OK && result.httpStatus() != HTTPResponse::HTTP_NO_CONTENT)
-    BOOST_THROW_EXCEPTION(ProtocolError{ "HTTP response status not accepted" }
+    BOOST_THROW_EXCEPTION(ProtocolError{ protocolErrorMessage("DELETE", uri, result) }
                           << HttpMethodErrorInfo{ "DELETE" } << HttpStatusErrorInfo{ result.httpStatus() }
                           << HttpResponseContentErrorInfo{ result.content() } << UriErrorInfo{ uri }
                           << HttpReasonErrorInfo{ result.reason() });
