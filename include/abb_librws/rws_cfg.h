@@ -46,6 +46,7 @@
 #ifndef RWS_CFG_H
 #define RWS_CFG_H
 
+#include <limits>
 #include <string>
 
 #include "rws_rapid.h"
@@ -88,6 +89,42 @@ struct Arm
    * The unit depends on the type of joint, i.e. [rad] for rotational and [m] for linear.
    */
   double upper_joint_bound;
+};
+
+/**
+ * \brief Representation of an 'External Motion Interface Data' instance (configuration type 'EXT_MOTION_DATA').
+ *
+ * The instance configures the EGM control loop 'speed = Kp * (pos_ref - pos) + speed_ref'
+ * (see "Application manual - Externally Guided Motion", sections 2.3 and 4.1).
+ *
+ * A numeric field holds NaN (or -1 for the level) when the controller did not report the corresponding attribute.
+ */
+struct ExtMotionData
+{
+  /**
+   * \brief The instance's name (the 'ExtConfigName' argument of the EGMSetupXX RAPID instructions).
+   */
+  std::string name;
+
+  /**
+   * \brief The level at which corrections are applied (0 = raw, 1 = filtering, 2 = path correction).
+   */
+  int level = -1;
+
+  /**
+   * \brief The default ramp time [s] for stopping External Motion Interface movements.
+   */
+  double ramp_time = std::numeric_limits<double>::quiet_NaN();
+
+  /**
+   * \brief The default proportional position gain (Kp) of the EGM position feedback control.
+   */
+  double kp = std::numeric_limits<double>::quiet_NaN();
+
+  /**
+   * \brief The default bandwidth [Hz] of the low-pass filter applied to the EGM speed contribution.
+   */
+  double filter_bandwidth = std::numeric_limits<double>::quiet_NaN();
 };
 
 /**

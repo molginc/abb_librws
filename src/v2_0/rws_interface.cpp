@@ -121,6 +121,70 @@ std::vector<cfg::moc::Arm> RWSInterface::getCFGArms()
   return result;
 }
 
+std::vector<cfg::moc::ExtMotionData> RWSInterface::getCFGExtMotionData()
+{
+  std::vector<cfg::moc::ExtMotionData> result;
+
+  RWSResult rws_result = rws_client_.getConfigurationInstances(Identifiers::MOC, "EXT_MOTION_DATA");
+
+  std::vector<Poco::XML::Node*> instances;
+  instances = xmlFindNodes(rws_result, XMLAttributes::CLASS_CFG_DT_INSTANCE_LI);
+
+  for (size_t i = 0; i < instances.size(); ++i)
+  {
+    std::vector<Poco::XML::Node*> attributes = xmlFindNodes(instances[i], XMLAttributes::CLASS_CFG_IA_T_LI);
+
+    cfg::moc::ExtMotionData ext_motion_data;
+
+    // Read the name from the instance title; a 'name' attribute, when present, replaces it.
+    ext_motion_data.name = xmlNodeGetAttributeValue(instances[i], Identifiers::TITLE);
+
+    for (size_t j = 0; j < attributes.size(); ++j)
+    {
+      Poco::XML::Node* attribute = attributes[j];
+      if (xmlNodeHasAttribute(attribute, Identifiers::TITLE, Identifiers::NAME))
+      {
+        ext_motion_data.name = xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE);
+      }
+      else if (xmlNodeHasAttribute(attribute, Identifiers::TITLE, "ext_motion_level"))
+      {
+        std::stringstream ss(xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE));
+        ss >> ext_motion_data.level;
+        if (ss.fail())
+          throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if (xmlNodeHasAttribute(attribute, Identifiers::TITLE, "ramp_time"))
+      {
+        std::stringstream ss(xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE));
+        ss >> ext_motion_data.ramp_time;
+        if (ss.fail())
+          throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if (xmlNodeHasAttribute(attribute, Identifiers::TITLE, "ext_motion_Kp"))
+      {
+        std::stringstream ss(xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE));
+        ss >> ext_motion_data.kp;
+        if (ss.fail())
+          throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+      else if (xmlNodeHasAttribute(attribute, Identifiers::TITLE, "ext_motion_filter_bandwidth"))
+      {
+        std::stringstream ss(xmlFindTextContent(attribute, XMLAttributes::CLASS_VALUE));
+        ss >> ext_motion_data.filter_bandwidth;
+        if (ss.fail())
+          throw std::runtime_error(EXCEPTION_PARSE_CFG);
+      }
+    }
+
+    if (ext_motion_data.name.empty())
+      throw std::runtime_error(EXCEPTION_PARSE_CFG);
+
+    result.push_back(ext_motion_data);
+  }
+
+  return result;
+}
+
 std::vector<cfg::moc::Joint> RWSInterface::getCFGJoints()
 {
   std::vector<cfg::moc::Joint> result;

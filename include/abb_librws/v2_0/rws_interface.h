@@ -75,6 +75,15 @@ public:
   std::vector<cfg::moc::Arm> getCFGArms();
 
   /**
+   * \brief Retrieves the configuration instances for the External Motion Interface Data (EGM) defined in the system.
+   *
+   * \return std::vector<cfg::moc::ExtMotionData> containing a list of the External Motion Interface Data instances.
+   *
+   * \throw std::runtime_error if failed to get or parse the configuration instances.
+   */
+  std::vector<cfg::moc::ExtMotionData> getCFGExtMotionData();
+
+  /**
    * \brief Retrieves the configuration instances for the joints defined in the system.
    *
    * \return std::vector<cfg::moc::Joint> containing a list of the joints defined in the system.
