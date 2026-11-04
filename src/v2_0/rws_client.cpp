@@ -113,6 +113,28 @@ RWSClient::RWSResult RWSClient::getConfigurationInstances(const std::string& top
   return parseContent(httpGet(uri));
 }
 
+void RWSClient::setConfigurationInstance(const std::string& topic,
+                                         const std::string& type,
+                                         const std::string& instance,
+                                         const std::map<std::string, std::string>& attribute_values)
+{
+  // Build the URI from the RWS manual's "Update CFG instance" request.
+  // NOTE: 3HAC050973 documents this URI for RWS 1.0; it is unconfirmed on RWS 2.0 (OmniCore).
+  std::string uri = generateConfigurationPath(topic, type) + Resources::INSTANCES + "/" + instance + "?action=set";
+
+  // Join the attributes as form-encoded name=value pairs
+  std::string content;
+  for (const auto& attribute_value : attribute_values)
+  {
+    if (!content.empty())
+      content += "&";
+    content += attribute_value.first + "=" + attribute_value.second;
+  }
+
+  std::string content_type = "application/x-www-form-urlencoded;v=2.0";
+  httpPost(uri, content, content_type);
+}
+
 RWSClient::RWSResult RWSClient::getIOSignals()
 {
   std::string const& uri = Resources::RW_IOSYSTEM_SIGNALS;
